@@ -1,0 +1,53 @@
+services:
+  auth-db-postgres:
+    image: postgres:16-alpine
+    container_name: auth-db-postgres
+    environment:
+      POSTGRES_DB: ${AUTH_POSTGRES_DB_NAME}
+      POSTGRES_USER: ${AUTH_POSTGRES_DB_USER}
+      POSTGRES_PASSWORD: ${AUTH_POSTGRES_DB_PASSWORD}
+    ports:
+      - "${AUTH_POSTGRES_DB_EXTERNAL_PORT}:${AUTH_POSTGRES_DB_INTERNAL_PORT}"
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${AUTH_POSTGRES_DB_USER}"]
+      interval: ${HEALTHCHECK_INTERVAL}
+      timeout: ${HEALTHCHECK_TIMEOUT}
+      retries: ${HEALTHCHECK_RETRIES}
+    restart: unless-stopped
+    networks:
+      - auth-network
+
+  auth-service:
+    build:
+      context: ./component/authMicro
+      dockerfile: Dockerfile
+    container_name: auth-service
+    environment:
+      ServerAddr: "0.0.0.0:8080"
+      DBHost: ${AUTH_POSTGRES_DB_HOST}
+      DBPort: ${AUTH_POSTGRES_DB_INTERNAL_PORT}
+      DBUsername: ${AUTH_POSTGRES_DB_USER}
+      DBPassword: ${AUTH_POSTGRES_DB_PASSWORD}
+      DBName: ${AUTH_POSTGRES_DB_NAME}
+      DBSSLMode: ${AUTH_PGSSLMODE_STATUS}
+      JWTSecret: ${JWT_SECRET}
+      JWTAccessTokenExpiration: 900000
+      JWTRefreshTokenExpiration: 604800000
+    ports:
+      - "8080:8080"
+    depends_on:
+      auth-db-postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - auth-network
+
+volumes:
+  auth_db_data:
+
+networks:
+  auth-network:
+    name: auth-network
+    driver: bridge
