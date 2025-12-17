@@ -50,7 +50,6 @@ func (r *RegistrationService) Register(userData map[string]any) (*RegisterAnswer
 		return nil, &domain.Error{Name: "internalError"}
 	}
 
-	// ValidateAccountData with timeout and enhanced logging
 	ctxV, cancelV := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelV()
 	validationResponse, err := r.accountServiceClient.ValidateAccountData(
@@ -72,7 +71,6 @@ func (r *RegistrationService) Register(userData map[string]any) (*RegisterAnswer
 		return nil, &domain.Error{Name: "internalError"}
 	}
 
-	// GetAccountByEmail with timeout and enhanced logging
 	ctxG, cancelG := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelG()
 	getAccountResponse, err := r.accountServiceClient.GetAccountByEmail(
@@ -142,7 +140,7 @@ func (r *RegistrationService) ConfirmRegistration(userData map[string]any) *doma
 	grpcMap, err := converter.ConvertToGrpcMap(userData)
 	if err != nil {
 		r.logger.Error(err)
-		return &domain.Error{Name: "internalError8"}
+		return &domain.Error{Name: "internalError"}
 	}
 
 	ctxV, cancelV := context.WithTimeout(context.Background(), 5*time.Second)
@@ -154,7 +152,7 @@ func (r *RegistrationService) ConfirmRegistration(userData map[string]any) *doma
 	if err != nil {
 		st, _ := status.FromError(err)
 		r.logger.Error(fmt.Errorf("ValidateAccountData error: %v, grpc status: %v", err, st))
-		return &domain.Error{Name: "internalError9"}
+		return &domain.Error{Name: "internalError"}
 	}
 	if validationResponse.Error != nil {
 		return domain.GrpcErrorMapToError(validationResponse.Error)
@@ -163,13 +161,13 @@ func (r *RegistrationService) ConfirmRegistration(userData map[string]any) *doma
 	email, ok := userData["email"].(string)
 	if !ok {
 		r.logger.Error(errors.New("email not found in userData"))
-		return &domain.Error{Name: "internalError10"}
+		return &domain.Error{Name: "internalError"}
 	}
 
 	session, err := r.registrationSessionRepository.FindByEmail(email)
 	if err != nil {
 		r.logger.Error(err)
-		return &domain.Error{Name: "internalError11"}
+		return &domain.Error{Name: "internalError"}
 	}
 	if session.CodeExpires.Before(time.Now()) {
 		return &domain.Error{
@@ -198,11 +196,16 @@ func (r *RegistrationService) ConfirmRegistration(userData map[string]any) *doma
 	if err != nil {
 		st, _ := status.FromError(err)
 		r.logger.Error(fmt.Errorf("CreateAccount error: %v, grpc status: %v", err, st))
-		return &domain.Error{Name: "internalError12"}
+		return &domain.Error{Name: "internalError"}
 	}
 
 	if createAccountResponse.Error != nil {
 		return domain.GrpcErrorMapToError(createAccountResponse.Error)
+	}
+
+	if err := r.registrationSessionRepository.DeleteByEmail(email); err != nil {
+		r.logger.Error(err)
+		return &domain.Error{Name: "internalError"}
 	}
 
 	r.logger.Info("Account successfully created for email=" + email)

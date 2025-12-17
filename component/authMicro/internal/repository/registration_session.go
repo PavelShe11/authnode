@@ -40,3 +40,12 @@ func (r RegistrationSessionRepository) Save(session *domain.RegistrationSession)
 	}
 	return nil
 }
+
+func (r RegistrationSessionRepository) DeleteByEmail(email string) error {
+	query := "DELETE FROM registration_session WHERE email = $1"
+	_, err := r.db.Exec(query, email)
+	if err != nil {
+		return err
+	}
+	return nil
+}
