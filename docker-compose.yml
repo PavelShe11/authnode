@@ -22,6 +22,7 @@ services:
     build:
       context: ./component/authMicro
       dockerfile: Dockerfile
+      target: run-release
     container_name: auth-service
     environment:
       DBHost: auth-db-postgres
@@ -66,6 +67,7 @@ services:
     build:
       context: ./component/userMicro
       dockerfile: Dockerfile
+      target: run-release
     container_name: user-service
     environment:
       DBHost: user-db-postgres

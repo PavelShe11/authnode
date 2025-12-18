@@ -1,0 +1,24 @@
+services:
+  auth-service:
+    build:
+      context: ./component/authMicro
+      dockerfile: Dockerfile
+      target: run-debug
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp=unconfined
+    ports:
+      - "40000:40000"
+
+  user-service:
+    build:
+      context: ./component/userMicro
+      dockerfile: Dockerfile
+      target: run-debug
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp=unconfined
+    ports:
+      - "40001:40001"
