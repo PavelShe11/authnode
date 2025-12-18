@@ -21,13 +21,7 @@ COPY --from=builder-debug /app/internal/repository/database/migrations /migratio
 COPY --from=builder-debug /go/bin/dlv /usr/local/bin/dlv
 EXPOSE 40001
 EXPOSE 80
-CMD dlv exec ./auth-app \
-    --headless \
-    --listen=:40001 \
-    --api-version=2 \
-    --accept-multiclient \
-    --continue \
-    --log
+CMD dlv exec ./auth-app --headless --listen=:40001 --api-version=2 --accept-multiclient --continue --log
 
 FROM alpine:3.19 AS run-release
 WORKDIR /app

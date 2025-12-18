@@ -5,20 +5,17 @@ import (
 	"userMicro/internal/domain"
 	"userMicro/internal/repository"
 	"userMicro/utlis/logger"
-
-	"github.com/go-playground/validator/v10"
+	"userMicro/utlis/validation"
 )
 
 type AccountService struct {
 	accountRepository *repository.AccountRepository
-	validate          validator.Validate
 	logger            logger.Logger
 }
 
 func NewAccountService(accountRepository *repository.AccountRepository, l logger.Logger) *AccountService {
 	return &AccountService{
 		accountRepository: accountRepository,
-		validate:          *validator.New(),
 		logger:            l,
 	}
 }
@@ -62,15 +59,7 @@ func (s *AccountService) ValidateAccountData(account domain.Account) *domain.Err
 	errs := &domain.Error{
 		Name: "validationError",
 	}
-	if err := s.validate.Var(account.Email, "required,email"); err != nil {
-		errs.FieldErrors = append(errs.FieldErrors, domain.ValidationErrorsMap(err.(validator.ValidationErrors))...)
-	}
-	if err := s.validate.Var(account.FirstName, "required,min=2,max=50"); err != nil {
-		errs.FieldErrors = append(errs.FieldErrors, domain.ValidationErrorsMap(err.(validator.ValidationErrors))...)
-	}
-	if err := s.validate.Var(account.LastName, "required,min=2,max=50"); err != nil {
-		errs.FieldErrors = append(errs.FieldErrors, domain.ValidationErrorsMap(err.(validator.ValidationErrors))...)
-	}
+	errs.FieldErrors = validation.Struct(&account)
 	if len(errs.FieldErrors) > 0 {
 		return errs
 	}
