@@ -19,6 +19,11 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+/*
+TODO: 1. Добавить хэширвоание кодов
+TODO: 2. Изменить формат даты на timestamp (Long)
+*/
+
 type RegisterAnswer struct {
 	CodeExpires time.Time `json:"codeExpires"`
 	CodePattern string    `json:"codePattern"`
@@ -135,7 +140,7 @@ func (r *RegistrationService) Register(userData map[string]any) (*RegisterAnswer
 		}
 	}
 
-	r.logger.Info(session)
+	r.logger.Debug(session)
 
 	return &RegisterAnswer{
 		CodeExpires: session.CodeExpires,

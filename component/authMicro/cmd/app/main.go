@@ -80,6 +80,7 @@ func main() {
 
 	// REST server
 	router := rest.NewRouter(
+		l,
 		handler.NewRegisterHandler(l, registrationService),
 		handler.NewLoginHandler(l, loginService),
 		handler.NewRefreshTokenHandler(l),

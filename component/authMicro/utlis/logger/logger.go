@@ -28,7 +28,16 @@ type zapLogger struct {
 
 // NewLogger creates a new logger instance
 func NewLogger() Logger {
-	// Create a custom encoder config
+	format := getLogFormat()
+
+	// Выбрать encoder в зависимости от формата
+	var levelEncoder zapcore.LevelEncoder
+	if format == "json" {
+		levelEncoder = zapcore.CapitalLevelEncoder // Без цветов для JSON
+	} else {
+		levelEncoder = zapcore.CapitalColorLevelEncoder // С цветами для console
+	}
+
 	encoderConfig := zapcore.EncoderConfig{
 		TimeKey:        "time",
 		LevelKey:       "level",
@@ -37,29 +46,26 @@ func NewLogger() Logger {
 		MessageKey:     "msg",
 		StacktraceKey:  "stacktrace",
 		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.CapitalLevelEncoder,
-		EncodeTime:     zapcore.ISO8601TimeEncoder,
+		EncodeLevel:    levelEncoder,
+		EncodeTime:     zapcore.TimeEncoderOfLayout("2006-01-02 15:04:05"),
 		EncodeDuration: zapcore.StringDurationEncoder,
 		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
 
-	// Create a custom configuration
 	cfg := zap.Config{
 		Level:            zap.NewAtomicLevelAt(getLogLevel()),
 		Development:      false,
-		Encoding:         "json",
+		Encoding:         format,
 		EncoderConfig:    encoderConfig,
 		OutputPaths:      []string{"stdout"},
 		ErrorOutputPaths: []string{"stderr"},
 	}
 
-	// Build logger
 	logger, err := cfg.Build()
 	if err != nil {
 		panic(err)
 	}
 
-	// Create sugar logger
 	sugar := logger.Sugar()
 
 	return &zapLogger{
@@ -69,7 +75,7 @@ func NewLogger() Logger {
 
 // getLogLevel returns the log level based on the environment
 func getLogLevel() zapcore.Level {
-	level := os.Getenv("LOG_LEVEL")
+	level := os.Getenv("LogLevel")
 	switch level {
 	case "debug":
 		return zap.DebugLevel
@@ -84,9 +90,18 @@ func getLogLevel() zapcore.Level {
 	}
 }
 
+// getLogFormat returns the log format based on the environment
+func getLogFormat() string {
+	format := os.Getenv("LogFormat")
+	if format == "json" {
+		return "json"
+	}
+	return "console"
+}
+
 // Debug logs a debug message
 func (l *zapLogger) Debug(args ...interface{}) {
-	l.logger.Debug(args...)
+	l.logger.Debugf("%#v", args...)
 }
 
 // Debugf logs a formatted debug message
@@ -96,7 +111,7 @@ func (l *zapLogger) Debugf(format string, args ...interface{}) {
 
 // Info logs an info message
 func (l *zapLogger) Info(args ...interface{}) {
-	l.logger.Info(args...)
+	l.logger.Infof("%#v", args...)
 }
 
 // Infof logs a formatted info message
@@ -106,7 +121,7 @@ func (l *zapLogger) Infof(format string, args ...interface{}) {
 
 // Warn logs a warning message
 func (l *zapLogger) Warn(args ...interface{}) {
-	l.logger.Warn(args...)
+	l.logger.Warnf("%#v", args...)
 }
 
 // Warnf logs a formatted warning message
@@ -116,7 +131,7 @@ func (l *zapLogger) Warnf(format string, args ...interface{}) {
 
 // Error logs an error message
 func (l *zapLogger) Error(args ...interface{}) {
-	l.logger.Error(args...)
+	l.logger.Errorf("%#v", args...)
 }
 
 // Errorf logs a formatted error message
@@ -126,7 +141,7 @@ func (l *zapLogger) Errorf(format string, args ...interface{}) {
 
 // Fatal logs a fatal message and terminates the program
 func (l *zapLogger) Fatal(args ...interface{}) {
-	l.logger.Fatal(args...)
+	l.logger.Fatalf("%#v", args...)
 }
 
 // Fatalf logs a formatted fatal message and terminates the program

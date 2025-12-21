@@ -18,6 +18,7 @@ services:
     networks:
       - shared-network
 
+
   auth-service:
     build:
       context: ./component/authMicro
@@ -25,6 +26,8 @@ services:
       target: run-release
     container_name: auth-service
     environment:
+      LogLevel: ${LOG_LEVEL}
+      LogFormat: ${LOG_FORMAT:-console}
       DBHost: auth-db-postgres
       DBName: ${AUTH_PG_DB_NAME:-auth-micro-db}
       DBUsername: ${AUTH_PG_DB_USER:-postgres}
@@ -71,6 +74,8 @@ services:
       target: run-release
     container_name: user-service
     environment:
+      LogLevel: ${LOG_LEVEL}
+      LogFormat: ${LOG_FORMAT:-console}
       DBHost: user-db-postgres
       DBName: ${USER_PG_DB_NAME:-user-micro-db}
       DBUsername: ${USER_PG_DB_USER:-postgres}

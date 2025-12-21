@@ -28,7 +28,16 @@ type zapLogger struct {
 
 // NewLogger creates a new logger instance
 func NewLogger() Logger {
-	// Create a custom encoder config
+	format := getLogFormat()
+
+	// Выбрать encoder в зависимости от формата
+	var levelEncoder zapcore.LevelEncoder
+	if format == "json" {
+		levelEncoder = zapcore.CapitalLevelEncoder // Без цветов для JSON
+	} else {
+		levelEncoder = zapcore.CapitalColorLevelEncoder // С цветами для console
+	}
+
 	encoderConfig := zapcore.EncoderConfig{
 		TimeKey:        "time",
 		LevelKey:       "level",
@@ -37,29 +46,26 @@ func NewLogger() Logger {
 		MessageKey:     "msg",
 		StacktraceKey:  "stacktrace",
 		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.CapitalLevelEncoder,
-		EncodeTime:     zapcore.ISO8601TimeEncoder,
+		EncodeLevel:    levelEncoder,
+		EncodeTime:     zapcore.TimeEncoderOfLayout("2006-01-02 15:04:05"),
 		EncodeDuration: zapcore.StringDurationEncoder,
 		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
 
-	// Create a custom configuration
 	cfg := zap.Config{
 		Level:            zap.NewAtomicLevelAt(getLogLevel()),
 		Development:      false,
-		Encoding:         "json",
+		Encoding:         format,
 		EncoderConfig:    encoderConfig,
 		OutputPaths:      []string{"stdout"},
 		ErrorOutputPaths: []string{"stderr"},
 	}
 
-	// Build logger
 	logger, err := cfg.Build()
 	if err != nil {
 		panic(err)
 	}
 
-	// Create sugar logger
 	sugar := logger.Sugar()
 
 	return &zapLogger{
@@ -69,7 +75,7 @@ func NewLogger() Logger {
 
 // getLogLevel returns the log level based on the environment
 func getLogLevel() zapcore.Level {
-	level := os.Getenv("LOG_LEVEL")
+	level := os.Getenv("LogLevel")
 	switch level {
 	case "debug":
 		return zap.DebugLevel
@@ -82,6 +88,15 @@ func getLogLevel() zapcore.Level {
 	default:
 		return zap.InfoLevel
 	}
+}
+
+// getLogFormat returns the log format based on the environment
+func getLogFormat() string {
+	format := os.Getenv("LogFormat")
+	if format == "json" {
+		return "json"
+	}
+	return "console"
 }
 
 // Debug logs a debug message
