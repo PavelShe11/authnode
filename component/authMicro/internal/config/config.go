@@ -26,10 +26,6 @@ type Config struct {
 	CodeGenConfig      CodeGenConfig
 }
 
-type HTTPConfig struct {
-	ServerAddr string
-}
-
 type DBConfig struct {
 	Host     string
 	Port     string

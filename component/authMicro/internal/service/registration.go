@@ -86,7 +86,17 @@ func (r *RegistrationService) getAccountByEmail(email string) (*grpcService.GetA
 	return accountGrpc, nil
 }
 
+func (r *RegistrationService) cleanupExpiredSessions() {
+	cleanupCtx, cancelCleanup := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelCleanup()
+	if err := r.registrationSessionRepository.CleanExpired(cleanupCtx); err != nil {
+		r.logger.Error(fmt.Errorf("error cleaning expired registration sessions: %w", err))
+	}
+}
+
 func (r *RegistrationService) Register(userData map[string]any) (*RegisterAnswer, *domain.Error) {
+	r.cleanupExpiredSessions()
+
 	if _, domainErr := r.validateRegistrationData(userData); domainErr != nil {
 		return nil, domainErr
 	}

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"authMicro/internal/domain"
+	"context"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -44,6 +45,15 @@ func (r RegistrationSessionRepository) Save(session *domain.RegistrationSession)
 func (r RegistrationSessionRepository) DeleteByEmail(email string) error {
 	query := "DELETE FROM registration_session WHERE email = $1"
 	_, err := r.db.Exec(query, email)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r RegistrationSessionRepository) CleanExpired(ctx context.Context) error {
+	query := "DELETE FROM registration_session WHERE code_expires < NOW()"
+	_, err := r.db.ExecContext(ctx, query)
 	if err != nil {
 		return err
 	}
