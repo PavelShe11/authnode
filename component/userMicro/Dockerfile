@@ -18,6 +18,7 @@ FROM alpine:3.19 AS run-debug
 WORKDIR /app
 COPY --from=builder-debug /app/user-app .
 COPY --from=builder-debug /app/internal/repository/database/migrations /migrations
+COPY --from=builder-debug /app/locales ./locales
 COPY --from=builder-debug /go/bin/dlv /usr/local/bin/dlv
 EXPOSE 40001
 EXPOSE 80

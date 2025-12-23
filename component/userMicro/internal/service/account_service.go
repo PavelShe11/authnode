@@ -1,34 +1,31 @@
 package service
 
 import (
-	"strings"
 	"userMicro/internal/domain"
 	"userMicro/internal/repository"
 	"userMicro/utlis/logger"
 	"userMicro/utlis/validation"
 )
 
-/**
-TODO: Добавить перевод ошибок
-*/
-
 type AccountService struct {
 	accountRepository *repository.AccountRepository
 	logger            logger.Logger
+	validator         *validation.Validator
 }
 
-func NewAccountService(accountRepository *repository.AccountRepository, l logger.Logger) *AccountService {
+func NewAccountService(
+	accountRepository *repository.AccountRepository,
+	l logger.Logger,
+	validator *validation.Validator,
+) *AccountService {
 	return &AccountService{
 		accountRepository: accountRepository,
 		logger:            l,
+		validator:         validator,
 	}
 }
 
 func (s *AccountService) CreateAccount(account domain.Account) *domain.Error {
-	account.Email = strings.TrimSpace(account.Email)
-	account.FirstName = strings.TrimSpace(account.FirstName)
-	account.LastName = strings.TrimSpace(account.LastName)
-
 	errs := s.ValidateAccountData(account)
 	if errs != nil {
 		return errs
@@ -66,7 +63,7 @@ func (s *AccountService) ValidateAccountData(account domain.Account) *domain.Err
 	errs := &domain.Error{
 		Name: "validationError",
 	}
-	errs.FieldErrors = validation.Struct(&account)
+	errs.FieldErrors = s.validator.Struct(&account)
 	if len(errs.FieldErrors) > 0 {
 		return errs
 	}

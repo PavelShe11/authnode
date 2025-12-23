@@ -11,12 +11,16 @@ import (
 	"userMicro/internal/repository/database"
 	"userMicro/internal/service"
 	"userMicro/utlis/logger"
+	"userMicro/utlis/translator"
+	"userMicro/utlis/validation"
 
 	"github.com/jmoiron/sqlx"
 )
 
 func main() {
 	l := logger.NewLogger()
+	v := validation.NewValidator()
+	trans := translator.NewTranslator(l)
 
 	cfg, errors := config.NewConfig()
 	if len(errors) > 0 {
@@ -42,12 +46,12 @@ func main() {
 
 	accountRepository := repository.NewAccountRepository(pg)
 
-	accountService := service.NewAccountService(accountRepository, l)
+	accountService := service.NewAccountService(accountRepository, l, v)
 
 	grpcServer := grpc.NewGRPCServer(cfg.Grpc, l)
 
 	// Register service before starting server
-	accountGrpcService.Register(grpcServer.Server, *accountService)
+	accountGrpcService.Register(grpcServer.Server, *accountService, trans)
 
 	go func() {
 		if err := grpcServer.Start(); err != nil {

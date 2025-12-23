@@ -9,58 +9,82 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// Singleton validator instance configured to use JSON field names
-var validate *validator.Validate
+// Validator holds the validation logic (without translation)
+type Validator struct {
+	validate *validator.Validate
+}
 
-func init() {
-	validate = validator.New()
+// NewValidator creates a new Validator instance
+func NewValidator() *Validator {
+	validate := validator.New()
 
-	// Configure validator to use JSON tag names instead of struct field names
+	// Register function to use json field names in validation errors
 	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
-		// Extract the JSON tag (handle format: "json:\"fieldName,omitempty\"")
 		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
-
-		// Fallback to struct field name if JSON tag is empty or "-"
 		if name == "" || name == "-" {
 			return fld.Name
 		}
-
 		return name
 	})
+
+	return &Validator{
+		validate: validate,
+	}
 }
 
-func Var(nameField string, field interface{}, tag string, error *domain.Error) {
-	err := validate.Var(field, tag)
+// Var validates a single variable and returns validation tag as error key
+func (v *Validator) Var(nameField string, field interface{}, tag string, error *domain.Error) {
+	err := v.validate.Var(field, tag)
 	if err == nil {
 		return
 	}
-	errorField := domain.FieldError{
-		Name: nameField,
-	}
+
 	var validErr validator.ValidationErrors
 	errors.As(err, &validErr)
-	for i, err := range validErr {
-		errorField.Message += err.Tag()
-		if len(validErr) < i+1 {
-			errorField.Message += ","
-		}
+
+	for _, e := range validErr {
+		error.FieldErrors = append(error.FieldErrors, domain.FieldError{
+			Name:    nameField,
+			Message: e.Tag(), // Returns validation tag: "required", "email", etc.
+			Params:  extractValidationParams(e),
+		})
 	}
-	error.FieldErrors = append(error.FieldErrors, errorField)
 }
 
-func Struct(s interface{}) []domain.FieldError {
-	result := make([]domain.FieldError, 0)
-	err := validate.Struct(s)
+// Struct validates a struct and returns validation tags as error keys
+func (v *Validator) Struct(s interface{}) []domain.FieldError {
+	err := v.validate.Struct(s)
 	if err == nil {
 		return nil
 	}
+
+	result := make([]domain.FieldError, 0)
 	var validErr validator.ValidationErrors
 	errors.As(err, &validErr)
+
 	for _, err := range validErr {
 		result = append(result, domain.FieldError{
 			Name:    err.Field(),
-			Message: err.Tag(),
+			Message: err.Tag(), // Returns validation tag: "required", "email", "min", etc.
+			Params:  extractValidationParams(err),
 		})
 	}
 	return result
+}
+
+// extractValidationParams extracts parameters from validation errors
+// For example: min=6 -> {"value": "6"}
+func extractValidationParams(err validator.FieldError) map[string]string {
+	params := make(map[string]string)
+
+	switch err.Tag() {
+	case "min", "max", "len", "gte", "lte", "gt", "lt", "eq", "ne":
+		params["value"] = err.Param()
+	case "oneof":
+		params["values"] = err.Param()
+	case "eqfield", "nefield", "gtfield", "ltfield":
+		params["field"] = err.Param()
+	}
+
+	return params
 }

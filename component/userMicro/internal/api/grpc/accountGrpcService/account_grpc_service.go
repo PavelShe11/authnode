@@ -5,19 +5,23 @@ import (
 	"userMicro/internal/api/grpc"
 	"userMicro/internal/domain"
 	"userMicro/internal/service"
+	"userMicro/utlis/translator"
 
 	grpc2 "google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
 type accountGrpcService struct {
 	grpc.UnimplementedAccountServiceServer
 	accountService service.AccountService
+	translator     *translator.Translator
 }
 
-func Register(server *grpc2.Server, accountService service.AccountService) {
+func Register(server *grpc2.Server, accountService service.AccountService, trans *translator.Translator) {
 	grpc.RegisterAccountServiceServer(server, &accountGrpcService{
 		accountService: accountService,
+		translator:     trans,
 	})
 }
 
@@ -29,16 +33,23 @@ func valueToString(m map[string]*structpb.Value, key string) string {
 	if !ok || v == nil {
 		return ""
 	}
-	// use GetStringValue to be explicit
 	return v.GetStringValue()
 }
 
-func (a accountGrpcService) CreateAccount(_ context.Context, request *grpc.CreateAccountRequest) (*grpc.CreateAccountResponse, error) {
+func (a accountGrpcService) CreateAccount(ctx context.Context, request *grpc.CreateAccountRequest) (*grpc.CreateAccountResponse, error) {
+	lang := getLangFromContext(ctx)
+
 	err := a.accountService.CreateAccount(domain.Account{
 		FirstName: valueToString(request.UserData, "firstName"),
 		LastName:  valueToString(request.UserData, "lastName"),
 		Email:     valueToString(request.UserData, "email"),
 	})
+
+	// Translate errors before sending via gRPC
+	if err != nil {
+		a.translator.TranslateError(err, lang)
+	}
+
 	return &grpc.CreateAccountResponse{
 		Error: mapToGrpcError(err),
 	}, nil
@@ -69,7 +80,6 @@ func (a accountGrpcService) accountMapToGetAccountResponse(account *domain.Accou
 		}, nil
 	}
 
-	// account expected to be non-nil when err == nil
 	if account == nil {
 		return &grpc.GetAccountResponse{
 			Result: &grpc.GetAccountResponse_Error{
@@ -91,12 +101,20 @@ func (a accountGrpcService) accountMapToGetAccountResponse(account *domain.Accou
 	}, nil
 }
 
-func (a accountGrpcService) ValidateAccountData(_ context.Context, request *grpc.ValidateAccountRequest) (*grpc.ValidateAccountResponse, error) {
+func (a accountGrpcService) ValidateAccountData(ctx context.Context, request *grpc.ValidateAccountRequest) (*grpc.ValidateAccountResponse, error) {
+	lang := getLangFromContext(ctx)
+
 	err := a.accountService.ValidateAccountData(domain.Account{
 		FirstName: valueToString(request.UserData, "firstName"),
 		LastName:  valueToString(request.UserData, "lastName"),
 		Email:     valueToString(request.UserData, "email"),
 	})
+
+	// Translate errors before sending via gRPC
+	if err != nil {
+		a.translator.TranslateError(err, lang)
+	}
+
 	return &grpc.ValidateAccountResponse{
 		Error: mapToGrpcError(err),
 	}, nil
@@ -117,4 +135,14 @@ func mapToGrpcError(e *domain.Error) *grpc.Error {
 		Name:           e.Name,
 		DetailedErrors: errs,
 	}
+}
+
+func getLangFromContext(ctx context.Context) string {
+	lang := "en" // Default language
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		if langs := md.Get("lang"); len(langs) > 0 {
+			lang = langs[0]
+		}
+	}
+	return lang
 }

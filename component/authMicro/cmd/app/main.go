@@ -10,6 +10,7 @@ import (
 	"authMicro/internal/service"
 	"authMicro/utlis/interceptor"
 	"authMicro/utlis/logger"
+	"authMicro/utlis/translator"
 	"context"
 	"os"
 	"os/signal"
@@ -24,6 +25,7 @@ import (
 
 func main() {
 	l := logger.NewLogger()
+	trans := translator.NewTranslator(l)
 	cfg, errors := config.NewConfig()
 	if len(errors) > 0 {
 		for _, err := range errors {
@@ -81,7 +83,7 @@ func main() {
 	// REST server
 	router := rest.NewRouter(
 		l,
-		handler.NewRegisterHandler(l, registrationService),
+		handler.NewRegisterHandler(l, registrationService, trans),
 		handler.NewLoginHandler(l, loginService),
 		handler.NewRefreshTokenHandler(l),
 	)

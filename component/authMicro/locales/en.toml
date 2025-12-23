@@ -1,0 +1,14 @@
+[invalidCode]
+other = "Invalid code"
+
+[codeExpired]
+other = "Code expired"
+
+[internalError]
+other = "Internal server error"
+
+[validationError]
+other = "Validation error"
+
+[internalServerError]
+other = "Internal server error"

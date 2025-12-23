@@ -13,13 +13,12 @@ import (
 	"fmt"
 	"time"
 
-	"google.golang.org/protobuf/types/known/structpb"
-
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 /*
-TODO: Отобразить ошибки при валидации полей на русском
 TODO: Вынести все утилитарные классы в отдельный модуль и подключить этот один модуль в микросервисы
 TODO: Отобразить ошибку при отсутствии кода
 TODO: Подумать о добавлении транзакций
@@ -38,12 +37,7 @@ type RegistrationService struct {
 	CodeGenConfig                 *config.CodeGenConfig
 }
 
-func NewRegistrationService(
-	registrationSessionRepository repository.RegistrationSessionRepository,
-	accountServiceClient grpcService.AccountServiceClient,
-	logger logger.Logger,
-	codeGenConfig *config.CodeGenConfig,
-) RegistrationService {
+func NewRegistrationService(registrationSessionRepository repository.RegistrationSessionRepository, accountServiceClient grpcService.AccountServiceClient, logger logger.Logger, codeGenConfig *config.CodeGenConfig) RegistrationService {
 	return RegistrationService{
 		registrationSessionRepository: registrationSessionRepository,
 		accountServiceClient:          accountServiceClient,
@@ -52,17 +46,22 @@ func NewRegistrationService(
 	}
 }
 
-func (r *RegistrationService) validateRegistrationData(userData map[string]any) (map[string]*structpb.Value, *domain.Error) {
+func (r *RegistrationService) validateRegistrationData(userData map[string]any, lang string) (map[string]*structpb.Value, error) {
 	grpcMap, err := converter.ConvertToGrpcMap(userData)
 	if err != nil {
 		r.logger.Error(err)
 		return nil, &domain.Error{Name: "internalError"}
 	}
 
-	ctxV, cancelV := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancelV()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Add metadata
+	md := metadata.Pairs("lang", lang)
+	ctx = metadata.NewOutgoingContext(ctx, md)
+
 	validationResponse, err := r.accountServiceClient.ValidateAccountData(
-		ctxV,
+		ctx,
 		&grpcService.ValidateAccountRequest{UserData: grpcMap},
 	)
 	if err != nil {
@@ -77,7 +76,7 @@ func (r *RegistrationService) validateRegistrationData(userData map[string]any) 
 	return grpcMap, nil
 }
 
-func (r *RegistrationService) getAccountByEmail(email string) (*grpcService.GetAccountResponse, *domain.Error) {
+func (r *RegistrationService) getAccountByEmail(email string) (*grpcService.GetAccountResponse, error) {
 	ctxG, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	accountGrpc, err := r.accountServiceClient.GetAccountByEmail(
@@ -101,10 +100,10 @@ func (r *RegistrationService) cleanupExpiredSessions() {
 	}
 }
 
-func (r *RegistrationService) Register(userData map[string]any) (*RegisterAnswer, *domain.Error) {
+func (r *RegistrationService) Register(userData map[string]any, lang string) (*RegisterAnswer, error) {
 	r.cleanupExpiredSessions()
 
-	if _, domainErr := r.validateRegistrationData(userData); domainErr != nil {
+	if _, domainErr := r.validateRegistrationData(userData, lang); domainErr != nil {
 		return nil, domainErr
 	}
 
@@ -175,7 +174,7 @@ func (r *RegistrationService) createOrUpdateSession(email string, newCode string
 	return session, nil
 }
 
-func (r *RegistrationService) validateConfirmationCode(email string, userData map[string]any) *domain.Error {
+func (r *RegistrationService) validateConfirmationCode(email string, userData map[string]any) error {
 	session, err := r.registrationSessionRepository.FindByEmail(email)
 	if err != nil {
 		r.logger.Error(err)
@@ -208,8 +207,8 @@ func (r *RegistrationService) validateConfirmationCode(email string, userData ma
 	return nil
 }
 
-func (r *RegistrationService) ConfirmRegistration(userData map[string]any) *domain.Error {
-	grpcMap, domainErr := r.validateRegistrationData(userData)
+func (r *RegistrationService) ConfirmRegistration(userData map[string]any, lang string) error {
+	grpcMap, domainErr := r.validateRegistrationData(userData, lang)
 	if domainErr != nil {
 		return domainErr
 	}
@@ -224,10 +223,14 @@ func (r *RegistrationService) ConfirmRegistration(userData map[string]any) *doma
 		return err
 	}
 
-	ctxC, cancelC := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancelC()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	md := metadata.Pairs("lang", lang)
+	ctx = metadata.NewOutgoingContext(ctx, md)
+
 	createAccountResponse, err := r.accountServiceClient.CreateAccount(
-		ctxC,
+		ctx,
 		&grpcService.CreateAccountRequest{UserData: grpcMap},
 	)
 
