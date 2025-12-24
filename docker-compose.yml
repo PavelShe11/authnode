@@ -21,7 +21,7 @@ services:
 
   auth-service:
     build:
-      context: ./component/authMicro
+      context: ./authMicro
       dockerfile: Dockerfile
       target: run-release
     container_name: auth-service
@@ -69,7 +69,7 @@ services:
 
   user-service:
     build:
-      context: ./component/userMicro
+      context: ./userMicro
       dockerfile: Dockerfile
       target: run-release
     container_name: user-service

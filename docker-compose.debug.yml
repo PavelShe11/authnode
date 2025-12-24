@@ -1,7 +1,7 @@
 services:
   auth-service:
     build:
-      context: ./component/authMicro
+      context: ./authMicro
       dockerfile: Dockerfile
       target: run-debug
     cap_add:
@@ -13,7 +13,7 @@ services:
 
   user-service:
     build:
-      context: ./component/userMicro
+      context: ./userMicro
       dockerfile: Dockerfile
       target: run-debug
     cap_add:
