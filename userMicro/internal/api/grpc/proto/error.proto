@@ -1,9 +1,14 @@
 syntax = "proto3";
 
-option go_package = "userMicro/internal/api/grpcService";
+option go_package = "github.com/PavelShe11/studbridge/user/internal/api/grpc";
+
+enum ErrorCode {
+  VALIDATION = 0;
+  INTERNAL = 1;
+}
 
 message Error {
-  string name = 1;
+  ErrorCode code = 1;
   repeated FieldError detailedErrors = 2;
 
   message FieldError {

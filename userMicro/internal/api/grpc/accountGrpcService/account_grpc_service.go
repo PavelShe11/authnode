@@ -2,6 +2,7 @@ package accountGrpcService
 
 import (
 	"context"
+	"errors"
 
 	commondomain "github.com/PavelShe11/studbridge/common/domain"
 	"github.com/PavelShe11/studbridge/common/translator"
@@ -85,7 +86,7 @@ func (a accountGrpcService) accountMapToGetAccountResponse(account *domain.Accou
 	if account == nil {
 		return &grpc.GetAccountResponse{
 			Result: &grpc.GetAccountResponse_Error{
-				Error: &grpc.Error{Name: "internalError"},
+				Error: &grpc.Error{Code: grpc.ErrorCode_INTERNAL},
 			},
 		}, nil
 	}
@@ -130,7 +131,8 @@ func mapToGrpcError(e error) *grpc.Error {
 	errs := make([]*grpc.Error_FieldError, 0)
 
 	// Try to type assert to BaseValidationError first (has field errors)
-	if validErr, ok := e.(*commondomain.BaseValidationError); ok {
+	var validErr *commondomain.BaseValidationError
+	if errors.As(e, &validErr) {
 		for _, err := range validErr.FieldErrors {
 			errs = append(errs, &grpc.Error_FieldError{
 				Name:    err.NameField,
@@ -138,22 +140,23 @@ func mapToGrpcError(e error) *grpc.Error {
 			})
 		}
 		return &grpc.Error{
-			Name:           validErr.Name,
+			Code:           grpc.ErrorCode_VALIDATION,
 			DetailedErrors: errs,
 		}
 	}
 
 	// Try to type assert to BaseError (no field errors)
-	if baseErr, ok := e.(*commondomain.BaseError); ok {
+	var baseError *commondomain.BaseError
+	if errors.As(e, &baseError) {
 		return &grpc.Error{
-			Name:           baseErr.Name,
+			Code:           grpc.ErrorCode_INTERNAL,
 			DetailedErrors: errs,
 		}
 	}
 
 	// Fallback for any other error
 	return &grpc.Error{
-		Name:           e.Error(),
+		Code:           grpc.ErrorCode_INTERNAL,
 		DetailedErrors: errs,
 	}
 }

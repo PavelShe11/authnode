@@ -4,7 +4,7 @@ plugins:
     out: internal/api/grpcService
     opt:
       - paths=source_relative
-  - name: go-grpcService
+  - name: go-grpc
     out: internal/api/grpcService
     opt:
       - paths=source_relative

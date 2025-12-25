@@ -22,18 +22,28 @@ var (
 			Params:    nil,
 		}},
 	}
+	ValidationError = &domain.BaseValidationError{BaseError: domain.BaseError{Code: "validationError"}}
 )
 
-func GrpcErrorMapToError(errs *grpcService.Error) *domain.BaseValidationError {
-	result := domain.BaseValidationError{
-		BaseError:   domain.BaseError{},
-		FieldErrors: make([]domain.FieldError, 0),
+func GrpcErrorMapToError(grpcErr *grpcService.Error) error {
+	if grpcErr == nil {
+		return nil
 	}
-	for _, err := range errs.DetailedErrors {
-		result.FieldErrors = append(result.FieldErrors, domain.FieldError{
+
+	fieldErrors := make([]domain.FieldError, 0, len(grpcErr.DetailedErrors))
+	for _, err := range grpcErr.DetailedErrors {
+		fieldErrors = append(fieldErrors, domain.FieldError{
 			NameField: err.Name,
 			Message:   err.Message,
 		})
 	}
-	return &result
+
+	switch grpcErr.Code {
+	case grpcService.ErrorCode_VALIDATION:
+		validationError := ValidationError
+		validationError.FieldErrors = fieldErrors
+		return validationError
+	default:
+		return domain.InternalError
+	}
 }

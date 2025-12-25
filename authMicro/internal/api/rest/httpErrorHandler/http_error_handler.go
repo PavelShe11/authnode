@@ -12,6 +12,9 @@ type DomainErrorHandler interface {
 
 func NewHttpErrorHandler(domainErrorHandlers ...DomainErrorHandler) echo.HTTPErrorHandler {
 	return func(err error, c echo.Context) {
+		if c.Response().Committed {
+			return
+		}
 		for _, domainErrorHandler := range domainErrorHandlers {
 			if domainErrorHandler.handle(err, c) {
 				return

@@ -50,9 +50,11 @@ func (h *baseErrorhandler) handle(err error, c echo.Context) bool {
 
 func getStatusCodeForBaseError(base string) (int, error) {
 	switch base {
-	case commondomain.InternalError.Name:
+	case commondomain.InternalError.Code:
 		return http.StatusInternalServerError, nil
-	case domain.InvalidCode.Name, domain.CodeExpired.Name:
+	case domain.InvalidCode.Code,
+		domain.CodeExpired.Code,
+		domain.ValidationError.Code:
 		return http.StatusBadRequest, nil
 	default:
 		return 0, errors.New("no mapping was added to the http code error for the error")

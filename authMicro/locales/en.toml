@@ -6,3 +6,6 @@ other = "Code expired"
 
 [internalError]
 other = "Internal server error"
+
+[validationError]
+validationError = "Validation error"

@@ -18,7 +18,7 @@ type AbstractError interface {
 }
 
 type BaseError struct {
-	Code string `json:"-"`
+	Code string `json:"code"`
 	Name string `json:"name"`
 }
 
@@ -43,7 +43,7 @@ func (e *BaseError) Error() string {
 }
 
 func (e *BaseError) Translate(translate func(msgID string, params map[string]interface{}) string) {
-	e.Name = translate(e.Name, nil)
+	e.Name = translate(e.Code, nil)
 }
 
 func (e *BaseError) GetCode() string {
@@ -64,7 +64,7 @@ func (e *BaseValidationError) Error() string {
 }
 
 func (e *BaseValidationError) Translate(translate func(msgID string, params map[string]interface{}) string) {
-	e.Name = translate(e.Name, nil)
+	e.Name = translate(e.Code, nil)
 
 	for i := range e.FieldErrors {
 		params := make(map[string]interface{})

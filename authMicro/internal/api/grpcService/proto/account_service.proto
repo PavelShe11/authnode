@@ -46,4 +46,3 @@ message CreateAccountRequest {
 message CreateAccountResponse {
   optional Error error = 1;
 }
-

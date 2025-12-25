@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/PavelShe11/studbridge/auth/internal/api/rest/httpErrorHandler"
 	"github.com/PavelShe11/studbridge/auth/internal/service"
+	"github.com/PavelShe11/studbridge/common/domain"
 	"github.com/PavelShe11/studbridge/common/logger"
 	"github.com/PavelShe11/studbridge/common/translator" // Added translator import
 
@@ -32,15 +34,14 @@ func NewRegisterHandler(
 func (h *Register) SendRegistrationCode(c echo.Context) error {
 	var req map[string]any
 	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		log.Println(err)
+		return domain.InternalError
 	}
 
 	lang := httpErrorHandler.GetLangFromHeader(c)            // Get language from header
 	answer, err := h.registrationService.Register(req, lang) // Pass language to service
 	if err != nil {
-		// Translate error before returning
-		h.translator.TranslateError(err, lang)
-		return c.JSON(http.StatusBadRequest, err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, answer)
@@ -49,15 +50,14 @@ func (h *Register) SendRegistrationCode(c echo.Context) error {
 func (h *Register) RegistrationConfirmEmail(c echo.Context) error {
 	var req map[string]interface{}
 	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		log.Println(err)
+		return domain.InternalError
 	}
 
-	lang := httpErrorHandler.GetLangFromHeader(c)               // Get language from header
-	err := h.registrationService.ConfirmRegistration(req, lang) // Pass language to service
+	lang := httpErrorHandler.GetLangFromHeader(c)
+	err := h.registrationService.ConfirmRegistration(req, lang)
 	if err != nil {
-		// Translate error before returning
-		h.translator.TranslateError(err, lang)
-		return c.JSON(http.StatusBadRequest, err)
+		return err
 	}
 
 	return c.NoContent(http.StatusOK)
