@@ -4,7 +4,7 @@
 // - protoc             (unknown)
 // source: account_service.proto
 
-package grpcService
+package grpcApi
 
 import (
 	context "context"

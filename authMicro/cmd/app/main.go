@@ -2,7 +2,12 @@ package main
 
 import (
 	"context"
-	"github.com/PavelShe11/studbridge/auth/internal/api/grpcService"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/PavelShe11/studbridge/auth/grpcApi"
 	"github.com/PavelShe11/studbridge/auth/internal/api/rest"
 	"github.com/PavelShe11/studbridge/auth/internal/api/rest/handler"
 	"github.com/PavelShe11/studbridge/auth/internal/config"
@@ -12,10 +17,6 @@ import (
 	"github.com/PavelShe11/studbridge/auth/utlis/interceptor"
 	"github.com/PavelShe11/studbridge/common/logger"
 	"github.com/PavelShe11/studbridge/common/translator"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
 	"github.com/jmoiron/sqlx"
 	"google.golang.org/grpc"
@@ -55,7 +56,7 @@ func main() {
 		l.Fatalf("Failed to initialize account accountGrpcService: %v", err)
 	}
 
-	accountServiceClient := grpcService.NewAccountServiceClient(conn)
+	accountServiceClient := grpcApi.NewAccountServiceClient(conn)
 
 	// database
 	db, err := database.NewPostgresDB(cfg.DB)

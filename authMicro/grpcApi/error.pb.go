@@ -4,7 +4,7 @@
 // 	protoc        (unknown)
 // source: error.proto
 
-package grpcService
+package grpcApi
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -187,7 +187,7 @@ const file_error_proto_rawDesc = "" +
 	"\tErrorCode\x12\x0e\n" +
 	"\n" +
 	"VALIDATION\x10\x00\x12\f\n" +
-	"\bINTERNAL\x10\x01B$Z\"userMicro/internal/api/grpcServiceb\x06proto3"
+	"\bINTERNAL\x10\x01B/Z-github.com/PavelShe11/studbridge/auth/grpcApib\x06proto3"
 
 var (
 	file_error_proto_rawDescOnce sync.Once

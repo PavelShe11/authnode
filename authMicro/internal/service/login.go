@@ -1,12 +1,14 @@
 package service
 
-import "github.com/PavelShe11/studbridge/auth/internal/api/grpcService"
+import (
+	"github.com/PavelShe11/studbridge/auth/grpcApi"
+)
 
 type LoginService struct {
-	accountService grpcService.AccountServiceClient
+	accountService grpcApi.AccountServiceClient
 }
 
-func NewLoginService(accountService grpcService.AccountServiceClient) LoginService {
+func NewLoginService(accountService grpcApi.AccountServiceClient) LoginService {
 	return LoginService{
 		accountService: accountService,
 	}

@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"github.com/PavelShe11/studbridge/auth/internal/api/grpcService"
+	"github.com/PavelShe11/studbridge/auth/grpcApi"
 	"github.com/PavelShe11/studbridge/common/domain"
 )
 
@@ -25,7 +25,7 @@ var (
 	ValidationError = &domain.BaseValidationError{BaseError: domain.BaseError{Code: "validationError"}}
 )
 
-func GrpcErrorMapToError(grpcErr *grpcService.Error) error {
+func GrpcErrorMapToError(grpcErr *grpcApi.Error) error {
 	if grpcErr == nil {
 		return nil
 	}
@@ -39,7 +39,7 @@ func GrpcErrorMapToError(grpcErr *grpcService.Error) error {
 	}
 
 	switch grpcErr.Code {
-	case grpcService.ErrorCode_VALIDATION:
+	case grpcApi.ErrorCode_VALIDATION:
 		validationError := ValidationError
 		validationError.FieldErrors = fieldErrors
 		return validationError

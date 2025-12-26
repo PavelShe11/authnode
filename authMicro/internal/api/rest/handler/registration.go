@@ -38,8 +38,8 @@ func (h *Register) SendRegistrationCode(c echo.Context) error {
 		return domain.InternalError
 	}
 
-	lang := httpErrorHandler.GetLangFromHeader(c)            // Get language from header
-	answer, err := h.registrationService.Register(req, lang) // Pass language to service
+	lang := httpErrorHandler.GetLangFromHeader(c)
+	answer, err := h.registrationService.Register(req, lang)
 	if err != nil {
 		return err
 	}

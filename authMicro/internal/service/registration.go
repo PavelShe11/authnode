@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/PavelShe11/studbridge/auth/internal/api/grpcService"
+	"github.com/PavelShe11/studbridge/auth/grpcApi"
 	"github.com/PavelShe11/studbridge/auth/internal/config"
 	"github.com/PavelShe11/studbridge/auth/internal/domain"
 	"github.com/PavelShe11/studbridge/auth/internal/repository"
@@ -34,12 +34,12 @@ type RegisterAnswer struct {
 
 type RegistrationService struct {
 	registrationSessionRepository repository.RegistrationSessionRepository
-	accountServiceClient          grpcService.AccountServiceClient
+	accountServiceClient          grpcApi.AccountServiceClient
 	logger                        logger.Logger
 	CodeGenConfig                 *config.CodeGenConfig
 }
 
-func NewRegistrationService(registrationSessionRepository repository.RegistrationSessionRepository, accountServiceClient grpcService.AccountServiceClient, logger logger.Logger, codeGenConfig *config.CodeGenConfig) RegistrationService {
+func NewRegistrationService(registrationSessionRepository repository.RegistrationSessionRepository, accountServiceClient grpcApi.AccountServiceClient, logger logger.Logger, codeGenConfig *config.CodeGenConfig) RegistrationService {
 	return RegistrationService{
 		registrationSessionRepository: registrationSessionRepository,
 		accountServiceClient:          accountServiceClient,
@@ -64,7 +64,7 @@ func (r *RegistrationService) validateRegistrationData(userData map[string]any, 
 
 	validationResponse, err := r.accountServiceClient.ValidateAccountData(
 		ctx,
-		&grpcService.ValidateAccountRequest{UserData: grpcMap},
+		&grpcApi.ValidateAccountRequest{UserData: grpcMap},
 	)
 	if err != nil {
 		st, _ := status.FromError(err)
@@ -78,12 +78,12 @@ func (r *RegistrationService) validateRegistrationData(userData map[string]any, 
 	return grpcMap, nil
 }
 
-func (r *RegistrationService) getAccountByEmail(email string) (*grpcService.GetAccountResponse, error) {
+func (r *RegistrationService) getAccountByEmail(email string) (*grpcApi.GetAccountResponse, error) {
 	ctxG, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	accountGrpc, err := r.accountServiceClient.GetAccountByEmail(
 		ctxG,
-		&grpcService.GetAccountByEmailRequest{Email: email},
+		&grpcApi.GetAccountByEmailRequest{Email: email},
 	)
 
 	if err != nil {
@@ -122,7 +122,7 @@ func (r *RegistrationService) Register(userData map[string]any, lang string) (*R
 
 	var session *domain.RegistrationSession
 
-	if account, ok := accountGrpc.Result.(*grpcService.GetAccountResponse_Account); ok && account != nil {
+	if account, ok := accountGrpc.Result.(*grpcApi.GetAccountResponse_Account); ok && account != nil {
 		session, err = r.createOrUpdateSession(email, "")
 		if err != nil {
 			r.logger.Error(err)
@@ -217,7 +217,7 @@ func (r *RegistrationService) ConfirmRegistration(userData map[string]any, lang 
 
 	createAccountResponse, err := r.accountServiceClient.CreateAccount(
 		ctx,
-		&grpcService.CreateAccountRequest{UserData: grpcMap},
+		&grpcApi.CreateAccountRequest{UserData: grpcMap},
 	)
 
 	if err != nil {
