@@ -11,6 +11,7 @@ import (
 	"github.com/PavelShe11/studbridge/auth/internal/repository"
 	"github.com/PavelShe11/studbridge/auth/utlis/converter"
 	"github.com/PavelShe11/studbridge/auth/utlis/generator"
+	"github.com/PavelShe11/studbridge/auth/utlis/hash"
 	"github.com/PavelShe11/studbridge/authMicro/grpcApi"
 	commondomain "github.com/PavelShe11/studbridge/common/domain"
 	"github.com/PavelShe11/studbridge/common/logger"
@@ -19,13 +20,6 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/structpb"
 )
-
-/*
-TODO: Вынести все утилитарные классы в отдельный модуль и подключить этот один модуль в микросервисы
-TODO: Отобразить ошибку при отсутствии кода
-TODO: Подумать о добавлении транзакций
-TODO: Добавить хэширвоание кодов
-*/
 
 type RegisterAnswer struct {
 	CodeExpires int64  `json:"codeExpires"`
@@ -129,20 +123,19 @@ func (r *RegistrationService) Register(userData map[string]any, lang string) (*R
 			return nil, err
 		}
 	} else {
-		var code string
-		code, err = generator.Reggen(r.CodeGenConfig.CodePattern, r.CodeGenConfig.CodeMaxLength)
+		var plaintextCode string
+		plaintextCode, err = generator.Reggen(r.CodeGenConfig.CodePattern, r.CodeGenConfig.CodeMaxLength)
 		if err != nil {
 			r.logger.Error(err)
 			return nil, commondomain.InternalError
 		}
-		session, err = r.createOrUpdateSession(email, code)
+
+		session, err = r.createOrUpdateSession(email, plaintextCode)
 		if err != nil {
-			r.logger.Error(err)
+			r.logger.Error(fmt.Errorf("failed to create or update session: %w", err))
 			return nil, commondomain.InternalError
 		}
 	}
-
-	r.logger.Debug(session)
 
 	return &RegisterAnswer{
 		CodeExpires: session.CodeExpires.Unix(),
@@ -150,27 +143,45 @@ func (r *RegistrationService) Register(userData map[string]any, lang string) (*R
 	}, nil
 }
 
-func (r *RegistrationService) createOrUpdateSession(email string, newCode string) (*domain.RegistrationSession, error) {
+func (r *RegistrationService) createOrUpdateSession(email string, code string) (*domain.RegistrationSession, error) {
 	session, err := r.registrationSessionRepository.FindByEmail(email)
-	if session == nil && err == nil {
+
+	if err != nil {
+		r.logger.Error(err)
+		return nil, err
+	}
+
+	originalCode := code
+	if code != "" {
+		code, err = hash.HashCode(code)
+		if err != nil {
+			r.logger.Error(fmt.Errorf("failed to hash verification code: %w", err))
+			return nil, commondomain.InternalError
+		}
+	}
+
+	if session == nil {
 		session = &domain.RegistrationSession{
-			Code:        newCode,
+			Code:        code,
 			Email:       email,
 			CodeExpires: time.Now().Add(r.CodeGenConfig.CodeTTL),
 			CreateAt:    time.Now(),
 		}
-	} else if err != nil {
-		r.logger.Error(err)
-		return nil, err
 	} else if session.CodeExpires.Before(time.Now()) {
-		session.Code = newCode
+		session.Code = code
 		session.CodeExpires = time.Now().Add(r.CodeGenConfig.CodeTTL)
+	} else {
+		return session, nil
 	}
 
 	if err := r.registrationSessionRepository.Save(session); err != nil {
 		r.logger.Error(err)
 		return nil, err
 	}
+
+	debugSession := *session
+	debugSession.Code = originalCode
+	r.logger.Debug(debugSession)
 
 	return session, nil
 }
@@ -187,9 +198,12 @@ func (r *RegistrationService) validateConfirmationCode(email string, userData ma
 	if session.CodeExpires.Before(time.Now()) {
 		return domain.CodeExpired
 	}
-	if code, ok := userData["code"].(string); (ok && code != session.Code) || code == "" {
+
+	submittedCode, ok := userData["code"].(string)
+	if !ok || submittedCode == "" || !hash.VerifyCode(session.Code, submittedCode) {
 		return domain.InvalidCode
 	}
+
 	return nil
 }
 

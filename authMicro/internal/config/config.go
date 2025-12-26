@@ -63,7 +63,7 @@ func NewConfig() (*Config, []error) {
 			InternalAPIKey: getEnvIsRequiredWithErrors("InternalAPIKey", &errors),
 		},
 		CodeGenConfig: CodeGenConfig{
-			CodeTTL:       time.Duration(getEnvAsInt("CodeTTL", 15)) * time.Minute,
+			CodeTTL:       time.Duration(getEnvAsInt("CodeTTL", 120)) * time.Second,
 			CodePattern:   getEnv("CodePattern", "\\d{6}"),
 			CodeMaxLength: getEnvAsInt("CodeMaxLength", 6),
 		},

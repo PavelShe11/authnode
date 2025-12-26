@@ -35,13 +35,14 @@ func (r RegistrationSessionRepository) FindByEmail(email string) (*domain.Regist
 }
 
 func (r RegistrationSessionRepository) Save(session *domain.RegistrationSession) error {
-	query := `INSERT INTO registration_session (code, email, code_expires) 
-	VALUES (:code, :email, :code_expires) 
-	ON CONFLICT (email) 
-	DO UPDATE 
-	SET code = EXCLUDED.code, code_expires = EXCLUDED.code_expires`
+	query := `INSERT INTO registration_session (code, email, code_expires)
+	VALUES ($1, $2, $3)
+	ON CONFLICT (email)
+	DO UPDATE
+	SET code = EXCLUDED.code, code_expires = EXCLUDED.code_expires
+	RETURNING id, code, email, code_expires, created_at`
 
-	_, err := r.db.NamedExec(query, session)
+	err := r.db.QueryRowx(query, session.Code, session.Email, session.CodeExpires).StructScan(session)
 	if err != nil {
 		return err
 	}
