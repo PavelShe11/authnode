@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/PavelShe11/studbridge/auth/internal/api/rest/httpErrorHandler"
@@ -34,7 +33,7 @@ func NewRegisterHandler(
 func (h *Register) SendRegistrationCode(c echo.Context) error {
 	var req map[string]any
 	if err := c.Bind(&req); err != nil {
-		log.Println(err)
+		h.logger.Error(err)
 		return domain.InternalError
 	}
 
@@ -50,7 +49,7 @@ func (h *Register) SendRegistrationCode(c echo.Context) error {
 func (h *Register) RegistrationConfirmEmail(c echo.Context) error {
 	var req map[string]interface{}
 	if err := c.Bind(&req); err != nil {
-		log.Println(err)
+		h.logger.Error(err)
 		return domain.InternalError
 	}
 

@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"github.com/PavelShe11/studbridge/auth/internal/api/rest/httpErrorHandler"
 	"github.com/PavelShe11/studbridge/auth/internal/service"
+	"github.com/PavelShe11/studbridge/common/domain"
 	"github.com/PavelShe11/studbridge/common/logger"
 
 	"net/http"
@@ -11,10 +13,10 @@ import (
 
 type Login struct {
 	logger       logger.Logger
-	loginService service.LoginService
+	loginService *service.LoginService
 }
 
-func NewLoginHandler(logger logger.Logger, loginService service.LoginService) *Login {
+func NewLoginHandler(logger logger.Logger, loginService *service.LoginService) *Login {
 	return &Login{
 		logger:       logger,
 		loginService: loginService,
@@ -24,17 +26,44 @@ func NewLoginHandler(logger logger.Logger, loginService service.LoginService) *L
 func (h *Login) SendLoginCode(c echo.Context) error {
 	var req map[string]interface{}
 	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		h.logger.Error(err)
+		return domain.InternalError
 	}
 
-	return c.JSON(http.StatusOK, req)
+	lang := httpErrorHandler.GetLangFromHeader(c)
+	email, ok := req["email"].(string)
+	if !ok {
+		email = ""
+	}
+	var answer, err = h.loginService.Login(email, lang)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, answer)
 }
 
 func (h *Login) ConfirmEmail(c echo.Context) error {
 	var req map[string]interface{}
 	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		h.logger.Error(err)
+		return domain.InternalError
 	}
 
-	return c.JSON(http.StatusOK, req)
+	lang := httpErrorHandler.GetLangFromHeader(c)
+	email, ok := req["email"].(string)
+	if !ok {
+		email = ""
+	}
+	code, ok := req["code"].(string)
+	if !ok {
+		code = ""
+	}
+
+	var answer, err = h.loginService.ConfirmLoginEmail(email, code, lang)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, answer)
 }
