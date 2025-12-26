@@ -4,25 +4,25 @@ import (
 	"context"
 	"errors"
 
+	"github.com/PavelShe11/studbridge/authMicro/grpcApi"
 	commondomain "github.com/PavelShe11/studbridge/common/domain"
 	"github.com/PavelShe11/studbridge/common/translator"
-	"github.com/PavelShe11/studbridge/user/internal/api/grpc"
 	"github.com/PavelShe11/studbridge/user/internal/domain"
 	"github.com/PavelShe11/studbridge/user/internal/service"
 
-	grpc2 "google.golang.org/grpc"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
 type accountGrpcService struct {
-	grpc.UnimplementedAccountServiceServer
+	grpcApi.UnimplementedAccountServiceServer
 	accountService service.AccountService
 	translator     *translator.Translator
 }
 
-func Register(server *grpc2.Server, accountService service.AccountService, trans *translator.Translator) {
-	grpc.RegisterAccountServiceServer(server, &accountGrpcService{
+func Register(server *grpc.Server, accountService service.AccountService, trans *translator.Translator) {
+	grpcApi.RegisterAccountServiceServer(server, &accountGrpcService{
 		accountService: accountService,
 		translator:     trans,
 	})
@@ -39,7 +39,7 @@ func valueToString(m map[string]*structpb.Value, key string) string {
 	return v.GetStringValue()
 }
 
-func (a accountGrpcService) CreateAccount(ctx context.Context, request *grpc.CreateAccountRequest) (*grpc.CreateAccountResponse, error) {
+func (a accountGrpcService) CreateAccount(ctx context.Context, request *grpcApi.CreateAccountRequest) (*grpcApi.CreateAccountResponse, error) {
 	lang := getLangFromContext(ctx)
 
 	err := a.accountService.CreateAccount(domain.Account{
@@ -53,12 +53,12 @@ func (a accountGrpcService) CreateAccount(ctx context.Context, request *grpc.Cre
 		a.translator.TranslateError(err, lang)
 	}
 
-	return &grpc.CreateAccountResponse{
+	return &grpcApi.CreateAccountResponse{
 		Error: mapToGrpcError(err),
 	}, nil
 }
 
-func (a accountGrpcService) GetAccountByEmail(_ context.Context, request *grpc.GetAccountByEmailRequest) (*grpc.GetAccountResponse, error) {
+func (a accountGrpcService) GetAccountByEmail(_ context.Context, request *grpcApi.GetAccountByEmailRequest) (*grpcApi.GetAccountResponse, error) {
 	return a.accountMapToGetAccountResponse(
 		a.accountService.GetAccountByEmail(
 			request.GetEmail(),
@@ -66,7 +66,7 @@ func (a accountGrpcService) GetAccountByEmail(_ context.Context, request *grpc.G
 	)
 }
 
-func (a accountGrpcService) GetAccountById(_ context.Context, request *grpc.GetAccountByIdRequest) (*grpc.GetAccountResponse, error) {
+func (a accountGrpcService) GetAccountById(_ context.Context, request *grpcApi.GetAccountByIdRequest) (*grpcApi.GetAccountResponse, error) {
 	return a.accountMapToGetAccountResponse(
 		a.accountService.GetAccountById(
 			request.GetAccountId(),
@@ -74,26 +74,26 @@ func (a accountGrpcService) GetAccountById(_ context.Context, request *grpc.GetA
 	)
 }
 
-func (a accountGrpcService) accountMapToGetAccountResponse(account *domain.Account, err error) (*grpc.GetAccountResponse, error) {
+func (a accountGrpcService) accountMapToGetAccountResponse(account *domain.Account, err error) (*grpcApi.GetAccountResponse, error) {
 	if err != nil {
-		return &grpc.GetAccountResponse{
-			Result: &grpc.GetAccountResponse_Error{
+		return &grpcApi.GetAccountResponse{
+			Result: &grpcApi.GetAccountResponse_Error{
 				Error: mapToGrpcError(err),
 			},
 		}, nil
 	}
 
 	if account == nil {
-		return &grpc.GetAccountResponse{
-			Result: &grpc.GetAccountResponse_Error{
-				Error: &grpc.Error{Code: grpc.ErrorCode_INTERNAL},
+		return &grpcApi.GetAccountResponse{
+			Result: &grpcApi.GetAccountResponse_Error{
+				Error: &grpcApi.Error{Code: grpcApi.ErrorCode_INTERNAL},
 			},
 		}, nil
 	}
 
-	return &grpc.GetAccountResponse{
-		Result: &grpc.GetAccountResponse_Account{
-			Account: &grpc.GetAccountResponse_AccountWrapper{
+	return &grpcApi.GetAccountResponse{
+		Result: &grpcApi.GetAccountResponse_Account{
+			Account: &grpcApi.GetAccountResponse_AccountWrapper{
 				UserData: map[string]*structpb.Value{
 					"firstName": structpb.NewStringValue(account.FirstName),
 					"lastName":  structpb.NewStringValue(account.LastName),
@@ -104,7 +104,7 @@ func (a accountGrpcService) accountMapToGetAccountResponse(account *domain.Accou
 	}, nil
 }
 
-func (a accountGrpcService) ValidateAccountData(ctx context.Context, request *grpc.ValidateAccountRequest) (*grpc.ValidateAccountResponse, error) {
+func (a accountGrpcService) ValidateAccountData(ctx context.Context, request *grpcApi.ValidateAccountRequest) (*grpcApi.ValidateAccountResponse, error) {
 	lang := getLangFromContext(ctx)
 
 	err := a.accountService.ValidateAccountData(domain.Account{
@@ -118,29 +118,29 @@ func (a accountGrpcService) ValidateAccountData(ctx context.Context, request *gr
 		a.translator.TranslateError(err, lang)
 	}
 
-	return &grpc.ValidateAccountResponse{
+	return &grpcApi.ValidateAccountResponse{
 		Error: mapToGrpcError(err),
 	}, nil
 }
 
-func mapToGrpcError(e error) *grpc.Error {
+func mapToGrpcError(e error) *grpcApi.Error {
 	if e == nil {
 		return nil
 	}
 
-	errs := make([]*grpc.Error_FieldError, 0)
+	errs := make([]*grpcApi.Error_FieldError, 0)
 
 	// Try to type assert to BaseValidationError first (has field errors)
 	var validErr *commondomain.BaseValidationError
 	if errors.As(e, &validErr) {
 		for _, err := range validErr.FieldErrors {
-			errs = append(errs, &grpc.Error_FieldError{
+			errs = append(errs, &grpcApi.Error_FieldError{
 				Name:    err.NameField,
 				Message: err.Message,
 			})
 		}
-		return &grpc.Error{
-			Code:           grpc.ErrorCode_VALIDATION,
+		return &grpcApi.Error{
+			Code:           grpcApi.ErrorCode_VALIDATION,
 			DetailedErrors: errs,
 		}
 	}
@@ -148,15 +148,15 @@ func mapToGrpcError(e error) *grpc.Error {
 	// Try to type assert to BaseError (no field errors)
 	var baseError *commondomain.BaseError
 	if errors.As(e, &baseError) {
-		return &grpc.Error{
-			Code:           grpc.ErrorCode_INTERNAL,
+		return &grpcApi.Error{
+			Code:           grpcApi.ErrorCode_INTERNAL,
 			DetailedErrors: errs,
 		}
 	}
 
 	// Fallback for any other error
-	return &grpc.Error{
-		Code:           grpc.ErrorCode_INTERNAL,
+	return &grpcApi.Error{
+		Code:           grpcApi.ErrorCode_INTERNAL,
 		DetailedErrors: errs,
 	}
 }
