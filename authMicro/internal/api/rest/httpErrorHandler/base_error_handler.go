@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/PavelShe11/studbridge/auth/internal/domain"
 	commondomain "github.com/PavelShe11/studbridge/common/domain"
 	"github.com/PavelShe11/studbridge/common/logger"
 	"github.com/PavelShe11/studbridge/common/translator"
@@ -34,7 +33,7 @@ func (h *baseErrorhandler) handle(err error, c echo.Context) bool {
 	statusCode, err := getStatusCodeForBaseError(domainErr.GetCode())
 	if err != nil {
 		statusCode = http.StatusInternalServerError
-		domainErr = commondomain.InternalError
+		domainErr = commondomain.NewInternalError()
 	}
 
 	lang := GetLangFromHeader(c)
@@ -50,11 +49,9 @@ func (h *baseErrorhandler) handle(err error, c echo.Context) bool {
 
 func getStatusCodeForBaseError(base string) (int, error) {
 	switch base {
-	case commondomain.InternalError.Code:
+	case "internalError":
 		return http.StatusInternalServerError, nil
-	case domain.InvalidCode.Code,
-		domain.CodeExpired.Code,
-		domain.ValidationError.Code:
+	case "invalidCode", "codeExpired", "validationError":
 		return http.StatusBadRequest, nil
 	default:
 		return 0, errors.New("no mapping was added to the http code error for the error")

@@ -48,7 +48,6 @@ func (a accountGrpcService) CreateAccount(ctx context.Context, request *grpcApi.
 		Email:     valueToString(request.UserData, "email"),
 	})
 
-	// Translate errors before sending via gRPC
 	if err != nil {
 		a.translator.TranslateError(err, lang)
 	}
@@ -94,11 +93,8 @@ func (a accountGrpcService) accountMapToGetAccountResponse(account *domain.Accou
 	return &grpcApi.GetAccountResponse{
 		Result: &grpcApi.GetAccountResponse_Account{
 			Account: &grpcApi.GetAccountResponse_AccountWrapper{
-				UserData: map[string]*structpb.Value{
-					"firstName": structpb.NewStringValue(account.FirstName),
-					"lastName":  structpb.NewStringValue(account.LastName),
-					"email":     structpb.NewStringValue(account.Email),
-				},
+				AccountId: account.Id,
+				Email:     account.Email,
 			},
 		},
 	}, nil
@@ -113,7 +109,6 @@ func (a accountGrpcService) ValidateAccountData(ctx context.Context, request *gr
 		Email:     valueToString(request.UserData, "email"),
 	})
 
-	// Translate errors before sending via gRPC
 	if err != nil {
 		a.translator.TranslateError(err, lang)
 	}
@@ -130,7 +125,6 @@ func mapToGrpcError(e error) *grpcApi.Error {
 
 	errs := make([]*grpcApi.Error_FieldError, 0)
 
-	// Try to type assert to BaseValidationError first (has field errors)
 	var validErr *commondomain.BaseValidationError
 	if errors.As(e, &validErr) {
 		for _, err := range validErr.FieldErrors {
@@ -145,7 +139,6 @@ func mapToGrpcError(e error) *grpcApi.Error {
 		}
 	}
 
-	// Try to type assert to BaseError (no field errors)
 	var baseError *commondomain.BaseError
 	if errors.As(e, &baseError) {
 		return &grpcApi.Error{
@@ -154,7 +147,6 @@ func mapToGrpcError(e error) *grpcApi.Error {
 		}
 	}
 
-	// Fallback for any other error
 	return &grpcApi.Error{
 		Code:           grpcApi.ErrorCode_INTERNAL,
 		DetailedErrors: errs,
@@ -162,7 +154,7 @@ func mapToGrpcError(e error) *grpcApi.Error {
 }
 
 func getLangFromContext(ctx context.Context) string {
-	lang := "en" // Default language
+	lang := "en"
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
 		if langs := md.Get("lang"); len(langs) > 0 {
 			lang = langs[0]

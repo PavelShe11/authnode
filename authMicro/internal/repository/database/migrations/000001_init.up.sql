@@ -11,11 +11,10 @@ CREATE TABLE login_session
 (
     id           UUID PRIMARY KEY   DEFAULT gen_random_uuid(),
     account_id   UUID,
-    email        TEXT      NOT NULL,
+    email        TEXT      NOT NULL UNIQUE,
     code         TEXT      NOT NULL,
     code_expires TIMESTAMP NOT NULL,
-    created_at   TIMESTAMP NOT NULL DEFAULT NOW(),
-    CONSTRAINT uc_login_email_id UNIQUE (email, account_id)
+    created_at   TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE refresh_token_session

@@ -34,7 +34,7 @@ func (s *AccountService) CreateAccount(account domain.Account) error {
 	err := s.accountRepository.CreateAccount(account)
 	if err != nil {
 		s.logger.Error(err)
-		return commondomain.InternalError
+		return commondomain.NewInternalError()
 	}
 	return nil
 }
@@ -46,7 +46,7 @@ func (s *AccountService) GetAccountByEmail(email string) (*domain.Account, error
 	}
 	if err != nil {
 		s.logger.Error(err)
-		return nil, commondomain.InternalError
+		return nil, commondomain.NewInternalError()
 	}
 	return account, nil
 }
@@ -55,13 +55,13 @@ func (s *AccountService) GetAccountById(id string) (*domain.Account, error) {
 	account, err := s.accountRepository.GetAccountById(id)
 	if err != nil {
 		s.logger.Error(err)
-		return nil, commondomain.InternalError
+		return nil, commondomain.NewInternalError()
 	}
 	return account, nil
 }
 
 func (s *AccountService) ValidateAccountData(account domain.Account) error {
-	errs := domain.ValidationError
+	errs := domain.NewValidationError()
 	errs.FieldErrors = s.validator.Struct(&account)
 	if len(errs.FieldErrors) > 0 {
 		return errs

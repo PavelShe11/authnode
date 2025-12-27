@@ -35,7 +35,8 @@ message GetAccountResponse {
   }
 
   message AccountWrapper {
-    map<string, google.protobuf.Value> userData = 1;
+    string accountId = 1;
+    string email = 2;
   }
 }
 

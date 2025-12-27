@@ -369,8 +369,9 @@ func (x *CreateAccountResponse) GetError() *Error {
 }
 
 type GetAccountResponse_AccountWrapper struct {
-	state         protoimpl.MessageState     `protogen:"open.v1"`
-	UserData      map[string]*structpb.Value `protobuf:"bytes,1,rep,name=userData,proto3" json:"userData,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccountId     string                 `protobuf:"bytes,1,opt,name=accountId,proto3" json:"accountId,omitempty"`
+	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -405,11 +406,18 @@ func (*GetAccountResponse_AccountWrapper) Descriptor() ([]byte, []int) {
 	return file_account_service_proto_rawDescGZIP(), []int{4, 0}
 }
 
-func (x *GetAccountResponse_AccountWrapper) GetUserData() map[string]*structpb.Value {
+func (x *GetAccountResponse_AccountWrapper) GetAccountId() string {
 	if x != nil {
-		return x.UserData
+		return x.AccountId
 	}
-	return nil
+	return ""
+}
+
+func (x *GetAccountResponse_AccountWrapper) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
 }
 
 var File_account_service_proto protoreflect.FileDescriptor
@@ -428,15 +436,13 @@ const file_account_service_proto_rawDesc = "" +
 	"\x18GetAccountByEmailRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\"5\n" +
 	"\x15GetAccountByIdRequest\x12\x1c\n" +
-	"\taccountId\x18\x01 \x01(\tR\taccountId\"\xb4\x02\n" +
+	"\taccountId\x18\x01 \x01(\tR\taccountId\"\xc4\x01\n" +
 	"\x12GetAccountResponse\x12>\n" +
 	"\aaccount\x18\x01 \x01(\v2\".GetAccountResponse.AccountWrapperH\x00R\aaccount\x12\x1e\n" +
-	"\x05error\x18\x02 \x01(\v2\x06.ErrorH\x00R\x05error\x1a\xb3\x01\n" +
-	"\x0eAccountWrapper\x12L\n" +
-	"\buserData\x18\x01 \x03(\v20.GetAccountResponse.AccountWrapper.UserDataEntryR\buserData\x1aS\n" +
-	"\rUserDataEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12,\n" +
-	"\x05value\x18\x02 \x01(\v2\x16.google.protobuf.ValueR\x05value:\x028\x01B\b\n" +
+	"\x05error\x18\x02 \x01(\v2\x06.ErrorH\x00R\x05error\x1aD\n" +
+	"\x0eAccountWrapper\x12\x1c\n" +
+	"\taccountId\x18\x01 \x01(\tR\taccountId\x12\x14\n" +
+	"\x05email\x18\x02 \x01(\tR\x05emailB\b\n" +
 	"\x06result\"\xac\x01\n" +
 	"\x14CreateAccountRequest\x12?\n" +
 	"\buserData\x18\x01 \x03(\v2#.CreateAccountRequest.UserDataEntryR\buserData\x1aS\n" +
@@ -464,7 +470,7 @@ func file_account_service_proto_rawDescGZIP() []byte {
 	return file_account_service_proto_rawDescData
 }
 
-var file_account_service_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_account_service_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_account_service_proto_goTypes = []any{
 	(*ValidateAccountRequest)(nil),            // 0: ValidateAccountRequest
 	(*ValidateAccountResponse)(nil),           // 1: ValidateAccountResponse
@@ -475,35 +481,32 @@ var file_account_service_proto_goTypes = []any{
 	(*CreateAccountResponse)(nil),             // 6: CreateAccountResponse
 	nil,                                       // 7: ValidateAccountRequest.UserDataEntry
 	(*GetAccountResponse_AccountWrapper)(nil), // 8: GetAccountResponse.AccountWrapper
-	nil,                    // 9: GetAccountResponse.AccountWrapper.UserDataEntry
-	nil,                    // 10: CreateAccountRequest.UserDataEntry
-	(*Error)(nil),          // 11: Error
-	(*structpb.Value)(nil), // 12: google.protobuf.Value
+	nil,                    // 9: CreateAccountRequest.UserDataEntry
+	(*Error)(nil),          // 10: Error
+	(*structpb.Value)(nil), // 11: google.protobuf.Value
 }
 var file_account_service_proto_depIdxs = []int32{
 	7,  // 0: ValidateAccountRequest.userData:type_name -> ValidateAccountRequest.UserDataEntry
-	11, // 1: ValidateAccountResponse.error:type_name -> Error
+	10, // 1: ValidateAccountResponse.error:type_name -> Error
 	8,  // 2: GetAccountResponse.account:type_name -> GetAccountResponse.AccountWrapper
-	11, // 3: GetAccountResponse.error:type_name -> Error
-	10, // 4: CreateAccountRequest.userData:type_name -> CreateAccountRequest.UserDataEntry
-	11, // 5: CreateAccountResponse.error:type_name -> Error
-	12, // 6: ValidateAccountRequest.UserDataEntry.value:type_name -> google.protobuf.Value
-	9,  // 7: GetAccountResponse.AccountWrapper.userData:type_name -> GetAccountResponse.AccountWrapper.UserDataEntry
-	12, // 8: GetAccountResponse.AccountWrapper.UserDataEntry.value:type_name -> google.protobuf.Value
-	12, // 9: CreateAccountRequest.UserDataEntry.value:type_name -> google.protobuf.Value
-	5,  // 10: AccountService.createAccount:input_type -> CreateAccountRequest
-	2,  // 11: AccountService.getAccountByEmail:input_type -> GetAccountByEmailRequest
-	3,  // 12: AccountService.getAccountById:input_type -> GetAccountByIdRequest
-	0,  // 13: AccountService.validateAccountData:input_type -> ValidateAccountRequest
-	6,  // 14: AccountService.createAccount:output_type -> CreateAccountResponse
-	4,  // 15: AccountService.getAccountByEmail:output_type -> GetAccountResponse
-	4,  // 16: AccountService.getAccountById:output_type -> GetAccountResponse
-	1,  // 17: AccountService.validateAccountData:output_type -> ValidateAccountResponse
-	14, // [14:18] is the sub-list for method output_type
-	10, // [10:14] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	10, // 3: GetAccountResponse.error:type_name -> Error
+	9,  // 4: CreateAccountRequest.userData:type_name -> CreateAccountRequest.UserDataEntry
+	10, // 5: CreateAccountResponse.error:type_name -> Error
+	11, // 6: ValidateAccountRequest.UserDataEntry.value:type_name -> google.protobuf.Value
+	11, // 7: CreateAccountRequest.UserDataEntry.value:type_name -> google.protobuf.Value
+	5,  // 8: AccountService.createAccount:input_type -> CreateAccountRequest
+	2,  // 9: AccountService.getAccountByEmail:input_type -> GetAccountByEmailRequest
+	3,  // 10: AccountService.getAccountById:input_type -> GetAccountByIdRequest
+	0,  // 11: AccountService.validateAccountData:input_type -> ValidateAccountRequest
+	6,  // 12: AccountService.createAccount:output_type -> CreateAccountResponse
+	4,  // 13: AccountService.getAccountByEmail:output_type -> GetAccountResponse
+	4,  // 14: AccountService.getAccountById:output_type -> GetAccountResponse
+	1,  // 15: AccountService.validateAccountData:output_type -> ValidateAccountResponse
+	12, // [12:16] is the sub-list for method output_type
+	8,  // [8:12] is the sub-list for method input_type
+	8,  // [8:8] is the sub-list for extension type_name
+	8,  // [8:8] is the sub-list for extension extendee
+	0,  // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_account_service_proto_init() }
@@ -524,7 +527,7 @@ func file_account_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_account_service_proto_rawDesc), len(file_account_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

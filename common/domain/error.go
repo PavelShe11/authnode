@@ -33,9 +33,10 @@ type FieldError struct {
 	Params    map[string]string `json:"-"` // Parameters for validation errors (not serialized to JSON)
 }
 
-var (
-	InternalError = &BaseError{Code: "internalError", Name: "internalError"}
-)
+// NewInternalError creates a new instance of InternalError
+func NewInternalError() *BaseError {
+	return &BaseError{Code: "internalError"}
+}
 
 // BaseError implements the error interface
 func (e *BaseError) Error() string {

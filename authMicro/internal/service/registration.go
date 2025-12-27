@@ -63,7 +63,7 @@ func (r *RegistrationService) validateRegistrationData(userData map[string]any, 
 	if err != nil {
 		st, _ := status.FromError(err)
 		r.logger.Error(fmt.Errorf("ValidateAccountData error: %v, grpc status: %v", err, st))
-		return nil, commondomain.InternalError
+		return nil, commondomain.NewInternalError()
 	}
 	if validationResponse.Error != nil {
 		return nil, domain.GrpcErrorMapToError(validationResponse.Error)
@@ -83,7 +83,7 @@ func (r *RegistrationService) getAccountByEmail(email string) (*grpcApi.GetAccou
 	if err != nil {
 		st, _ := status.FromError(err)
 		r.logger.Error(fmt.Errorf("GetAccountByEmail error: %v, grpc status: %v", err, st))
-		return nil, commondomain.InternalError
+		return nil, commondomain.NewInternalError()
 	}
 	return accountGrpc, nil
 }
@@ -106,7 +106,7 @@ func (r *RegistrationService) Register(userData map[string]any, lang string) (*R
 	email, ok := userData["email"].(string)
 	if !ok {
 		r.logger.Error(errors.New("email not found in response"))
-		return nil, commondomain.InternalError
+		return nil, commondomain.NewInternalError()
 	}
 
 	accountGrpc, err := r.getAccountByEmail(email)
@@ -127,13 +127,13 @@ func (r *RegistrationService) Register(userData map[string]any, lang string) (*R
 		plaintextCode, err = generator.Reggen(r.CodeGenConfig.CodePattern, r.CodeGenConfig.CodeMaxLength)
 		if err != nil {
 			r.logger.Error(err)
-			return nil, commondomain.InternalError
+			return nil, commondomain.NewInternalError()
 		}
 
 		session, err = r.createOrUpdateSession(email, plaintextCode)
 		if err != nil {
 			r.logger.Error(fmt.Errorf("failed to create or update session: %w", err))
-			return nil, commondomain.InternalError
+			return nil, commondomain.NewInternalError()
 		}
 	}
 
@@ -156,7 +156,7 @@ func (r *RegistrationService) createOrUpdateSession(email string, code string) (
 		code, err = hash.HashCode(code)
 		if err != nil {
 			r.logger.Error(fmt.Errorf("failed to hash verification code: %w", err))
-			return nil, commondomain.InternalError
+			return nil, commondomain.NewInternalError()
 		}
 	}
 
@@ -190,18 +190,18 @@ func (r *RegistrationService) validateConfirmationCode(email string, userData ma
 	session, err := r.registrationSessionRepository.FindByEmail(email)
 	if err != nil {
 		r.logger.Error(err)
-		return commondomain.InternalError
+		return commondomain.NewInternalError()
 	}
 	if session == nil {
-		return domain.InvalidCode
+		return domain.NewInvalidCodeError()
 	}
 	if session.CodeExpires.Before(time.Now()) {
-		return domain.CodeExpired
+		return domain.NewCodeExpiredError()
 	}
 
 	submittedCode, ok := userData["code"].(string)
 	if !ok || submittedCode == "" || !hash.VerifyCode(session.Code, submittedCode) {
-		return domain.InvalidCode
+		return domain.NewInvalidCodeError()
 	}
 
 	return nil
@@ -216,7 +216,7 @@ func (r *RegistrationService) ConfirmRegistration(userData map[string]any, lang 
 	email, ok := userData["email"].(string)
 	if !ok {
 		r.logger.Error(errors.New("email not found in userData"))
-		return commondomain.InternalError
+		return commondomain.NewInternalError()
 	}
 
 	if err := r.validateConfirmationCode(email, userData); err != nil {
@@ -237,7 +237,7 @@ func (r *RegistrationService) ConfirmRegistration(userData map[string]any, lang 
 	if err != nil {
 		st, _ := status.FromError(err)
 		r.logger.Error(fmt.Errorf("CreateAccount error: %v, grpc status: %v", err, st))
-		return commondomain.InternalError
+		return commondomain.NewInternalError()
 	}
 
 	if createAccountResponse.Error != nil {
@@ -246,7 +246,7 @@ func (r *RegistrationService) ConfirmRegistration(userData map[string]any, lang 
 
 	if err := r.registrationSessionRepository.DeleteByEmail(email); err != nil {
 		r.logger.Error(err)
-		return commondomain.InternalError
+		return commondomain.NewInternalError()
 	}
 
 	r.logger.Info("Account successfully created for email=" + email)

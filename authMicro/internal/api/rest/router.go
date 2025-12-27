@@ -15,10 +15,6 @@ import (
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
-/*
-TODO: Придумать, как идентифицировать ошибки, чтобы указывать точные http коды
-*/
-
 type Router struct {
 	e *echo.Echo
 }

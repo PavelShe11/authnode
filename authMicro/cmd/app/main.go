@@ -24,6 +24,10 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+/**
+TODO: Добавить обработку удаления аккаунта
+*/
+
 func main() {
 	l := logger.NewLogger()
 	trans := translator.NewTranslator(l)
@@ -76,10 +80,11 @@ func main() {
 	}
 
 	registrationSessionRepository := repository.NewRegistrationSessionRepository(db)
+	loginSessionRepository := repository.NewLoginSessionRepository(db)
 
 	// services
 	registrationService := service.NewRegistrationService(*registrationSessionRepository, accountServiceClient, l, &cfg.CodeGenConfig)
-	loginService := service.NewLoginService(accountServiceClient)
+	loginService := service.NewLoginService(*loginSessionRepository, accountServiceClient, l, &cfg.CodeGenConfig)
 
 	// REST server
 	router := rest.NewRouter(

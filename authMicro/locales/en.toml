@@ -9,3 +9,65 @@ other = "Internal server error"
 
 [validationError]
 validationError = "Validation error"
+
+# Simple validation tags
+[required]
+other = "This field is required"
+
+[email]
+other = "Must be a valid email address"
+
+[url]
+other = "Must be a valid URL"
+
+[alpha]
+other = "Must contain only alphabetic characters"
+
+[alphanum]
+other = "Must contain only alphanumeric characters"
+
+[numeric]
+other = "Must be a valid number"
+
+# Parameterized validation tags
+[min]
+other = "Must be at least {{.value}} characters"
+
+[max]
+other = "Must be at most {{.value}} characters"
+
+[len]
+other = "Must be exactly {{.value}} characters"
+
+[gte]
+other = "Must be greater than or equal to {{.value}}"
+
+[lte]
+other = "Must be less than or equal to {{.value}}"
+
+[gt]
+other = "Must be greater than {{.value}}"
+
+[lt]
+other = "Must be less than {{.value}}"
+
+[eq]
+other = "Must be equal to {{.value}}"
+
+[ne]
+other = "Must not be equal to {{.value}}"
+
+[oneof]
+other = "Must be one of: {{.values}}"
+
+[eqfield]
+other = "Must be equal to {{.field}}"
+
+[nefield]
+other = "Must not be equal to {{.field}}"
+
+[gtfield]
+other = "Must be greater than {{.field}}"
+
+[ltfield]
+other = "Must be less than {{.field}}"

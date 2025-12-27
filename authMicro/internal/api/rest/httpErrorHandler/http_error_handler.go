@@ -29,15 +29,11 @@ func NewHttpErrorHandler(domainErrorHandlers ...DomainErrorHandler) echo.HTTPErr
 func GetLangFromHeader(c echo.Context) string {
 	acceptLanguage := c.Request().Header.Get("Accept-Language")
 	if acceptLanguage == "" {
-		return "en" // Default language
+		return "en"
 	}
-
-	// Basic parsing: split by comma and take the first one.
-	// In a real app, you'd use a more robust Accept-Language parser.
 	langs := strings.Split(acceptLanguage, ",")
 	if len(langs) > 0 {
 		return strings.TrimSpace(strings.Split(langs[0], ";")[0])
 	}
-
-	return "en" // Fallback
+	return "en"
 }

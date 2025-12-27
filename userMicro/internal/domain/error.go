@@ -1,12 +1,13 @@
 package domain
 
 import (
-	"github.com/PavelShe11/studbridge/common/domain"
+	commondomain "github.com/PavelShe11/studbridge/common/domain"
 )
 
-var (
-	ValidationError = &domain.BaseValidationError{
-		BaseError:   domain.BaseError{Code: "validationError"},
-		FieldErrors: make([]domain.FieldError, 0),
+// NewValidationError creates a new instance of ValidationError
+func NewValidationError() *commondomain.BaseValidationError {
+	return &commondomain.BaseValidationError{
+		BaseError:   commondomain.BaseError{Code: "validationError"},
+		FieldErrors: make([]commondomain.FieldError, 0),
 	}
-)
+}

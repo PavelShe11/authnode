@@ -3,7 +3,6 @@ package handler
 import (
 	"github.com/PavelShe11/studbridge/auth/internal/api/rest/httpErrorHandler"
 	"github.com/PavelShe11/studbridge/auth/internal/service"
-	"github.com/PavelShe11/studbridge/common/domain"
 	"github.com/PavelShe11/studbridge/common/logger"
 
 	"net/http"
@@ -27,15 +26,14 @@ func (h *Login) SendLoginCode(c echo.Context) error {
 	var req map[string]interface{}
 	if err := c.Bind(&req); err != nil {
 		h.logger.Error(err)
-		return domain.InternalError
+		return err
 	}
 
-	lang := httpErrorHandler.GetLangFromHeader(c)
 	email, ok := req["email"].(string)
 	if !ok {
 		email = ""
 	}
-	var answer, err = h.loginService.Login(email, lang)
+	var answer, err = h.loginService.Login(email)
 	if err != nil {
 		return err
 	}
@@ -47,7 +45,7 @@ func (h *Login) ConfirmEmail(c echo.Context) error {
 	var req map[string]interface{}
 	if err := c.Bind(&req); err != nil {
 		h.logger.Error(err)
-		return domain.InternalError
+		return err
 	}
 
 	lang := httpErrorHandler.GetLangFromHeader(c)
