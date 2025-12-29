@@ -32,9 +32,9 @@ services:
       DBName: ${AUTH_PG_DB_NAME:-auth-micro-db}
       DBUsername: ${AUTH_PG_DB_USER:-postgres}
       DBPassword: ${AUTH_PG_DB_PASSWORD:-postgres}
-      JWTSecret: ${JWT_SECRET}
-      JWTAccessTokenExpiration: ${ACCESS_TOKEN_LIFETIME:-86400000}
-      JWTRefreshTokenExpiration: ${REFRESH_TOKEN_LIFETIME:-432000000}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_EXPIRATION: ${ACCESS_TOKEN_LIFETIME:-900}
+      JWT_REFRESH_EXPIRATION: ${REFRESH_TOKEN_LIFETIME:-604800}
       CodeTTL: ${CODE_TTL}
       CodePattern: ${CODE_PATTERN}
       CodeMaxLength: ${CODE_MAX_LENGTH}
@@ -83,9 +83,9 @@ services:
       DBName: ${USER_PG_DB_NAME:-user-micro-db}
       DBUsername: ${USER_PG_DB_USER:-postgres}
       DBPassword: ${USER_PG_DB_PASSWORD:-postgres}
-      JWTSecret: ${JWT_SECRET}
-      JWTAccessTokenExpiration: ${ACCESS_TOKEN_LIFETIME:-86400000}
-      JWTRefreshTokenExpiration: ${REFRESH_TOKEN_LIFETIME:-432000000}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_EXPIRATION: ${ACCESS_TOKEN_LIFETIME:-900}
+      JWT_REFRESH_EXPIRATION: ${REFRESH_TOKEN_LIFETIME:-604800}
       InternalAPIKey: ${INTERNAL_API_KEY}
     depends_on:
       user-db-postgres:

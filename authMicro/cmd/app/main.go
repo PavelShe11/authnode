@@ -17,6 +17,7 @@ import (
 	"github.com/PavelShe11/studbridge/authMicro/grpcApi"
 	"github.com/PavelShe11/studbridge/common/logger"
 	"github.com/PavelShe11/studbridge/common/translator"
+	"github.com/PavelShe11/studbridge/common/validation"
 
 	"github.com/jmoiron/sqlx"
 	"google.golang.org/grpc"
@@ -32,6 +33,7 @@ func main() {
 	l := logger.NewLogger()
 	trans := translator.NewTranslator(l)
 	cfg, errors := config.NewConfig()
+	v := validation.NewValidator()
 	if len(errors) > 0 {
 		for _, err := range errors {
 			l.Error(err.Error())
@@ -81,18 +83,20 @@ func main() {
 
 	registrationSessionRepository := repository.NewRegistrationSessionRepository(db)
 	loginSessionRepository := repository.NewLoginSessionRepository(db)
+	refreshTokenSessionRepository := repository.NewRefreshTokenSessionRepository(db)
 
 	// services
 	registrationService := service.NewRegistrationService(*registrationSessionRepository, accountServiceClient, l, &cfg.CodeGenConfig)
-	loginService := service.NewLoginService(*loginSessionRepository, accountServiceClient, l, &cfg.CodeGenConfig)
+	loginService := service.NewLoginService(*loginSessionRepository, accountServiceClient, l, &cfg.CodeGenConfig, v)
+	tokenService := service.NewTokenService(&cfg.JWT, refreshTokenSessionRepository, accountServiceClient, l)
 
 	// REST server
 	router := rest.NewRouter(
 		l,
 		trans,
 		handler.NewRegisterHandler(l, registrationService, trans),
-		handler.NewLoginHandler(l, loginService),
-		handler.NewRefreshTokenHandler(l),
+		handler.NewLoginHandler(l, loginService, tokenService),
+		handler.NewRefreshTokenHandler(l, tokenService),
 	)
 
 	go func() {

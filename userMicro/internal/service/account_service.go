@@ -3,9 +3,9 @@ package service
 import (
 	commondomain "github.com/PavelShe11/studbridge/common/domain"
 	"github.com/PavelShe11/studbridge/common/logger"
+	"github.com/PavelShe11/studbridge/common/validation"
 	"github.com/PavelShe11/studbridge/user/internal/domain"
 	"github.com/PavelShe11/studbridge/user/internal/repository"
-	"github.com/PavelShe11/studbridge/user/utlis/validation"
 )
 
 type AccountService struct {
@@ -61,7 +61,7 @@ func (s *AccountService) GetAccountById(id string) (*domain.Account, error) {
 }
 
 func (s *AccountService) ValidateAccountData(account domain.Account) error {
-	errs := domain.NewValidationError()
+	errs := commondomain.NewValidationError()
 	errs.FieldErrors = s.validator.Struct(&account)
 	if len(errs.FieldErrors) > 0 {
 		return errs

@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"net/mail"
 	"time"
 
 	"github.com/PavelShe11/studbridge/auth/internal/config"
@@ -14,6 +13,7 @@ import (
 	"github.com/PavelShe11/studbridge/authMicro/grpcApi"
 	commondomain "github.com/PavelShe11/studbridge/common/domain"
 	"github.com/PavelShe11/studbridge/common/logger"
+	"github.com/PavelShe11/studbridge/common/validation"
 	"google.golang.org/grpc/status"
 )
 
@@ -43,6 +43,7 @@ type LoginService struct {
 	accountService         grpcApi.AccountServiceClient
 	logger                 logger.Logger
 	CodeGenConfig          *config.CodeGenConfig
+	validator              *validation.Validator
 }
 
 func NewLoginService(
@@ -50,12 +51,14 @@ func NewLoginService(
 	accountService grpcApi.AccountServiceClient,
 	logger logger.Logger,
 	codeGenConfig *config.CodeGenConfig,
+	validator *validation.Validator,
 ) *LoginService {
 	return &LoginService{
 		loginSessionRepository: loginSessionRepository,
 		accountService:         accountService,
 		logger:                 logger,
 		CodeGenConfig:          codeGenConfig,
+		validator:              validator,
 	}
 }
 
@@ -82,30 +85,6 @@ func (l *LoginService) getAccountByEmail(email string) (*grpcApi.GetAccountRespo
 		return nil, commondomain.NewInternalError()
 	}
 	return accountGrpc, nil
-}
-
-func (l *LoginService) validateEmail(email string) error {
-	if email == "" {
-		validationError := domain.NewValidationError()
-		validationError.FieldErrors = append(validationError.FieldErrors, commondomain.FieldError{
-			NameField: "email",
-			Message:   "required",
-			Params:    nil,
-		})
-		return validationError
-	}
-
-	if _, err := mail.ParseAddress(email); err != nil {
-		validationError := domain.NewValidationError()
-		validationError.FieldErrors = append(validationError.FieldErrors, commondomain.FieldError{
-			NameField: "email",
-			Message:   "email",
-			Params:    nil,
-		})
-		return validationError
-	}
-
-	return nil
 }
 
 func (l *LoginService) createOrUpdateSession(email string, accountId *string, code string) (*domain.LoginSession, error) {
@@ -161,8 +140,10 @@ func (l *LoginService) createOrUpdateSession(email string, accountId *string, co
 func (l *LoginService) Login(email string) (*LoginAnswer, error) {
 	l.cleanupExpiredSessions()
 
-	if err := l.validateEmail(email); err != nil {
-		return nil, err
+	errs := commondomain.NewValidationError()
+	l.validator.Var("email", email, "required,email", errs)
+	if len(errs.FieldErrors) > 0 {
+		return nil, errs
 	}
 
 	accountGrpc, err := l.getAccountByEmail(email)
@@ -171,10 +152,8 @@ func (l *LoginService) Login(email string) (*LoginAnswer, error) {
 	}
 
 	var accountId *string
-	if account, ok := accountGrpc.Result.(*grpcApi.GetAccountResponse_Account); ok && account != nil && account.Account != nil {
-		if account.Account.AccountId != "" {
-			accountId = &account.Account.AccountId
-		}
+	if account := accountGrpc.GetAccount(); account != nil && account.AccountId != "" {
+		accountId = &account.AccountId
 	}
 
 	var session *domain.LoginSession
@@ -205,6 +184,59 @@ func (l *LoginService) Login(email string) (*LoginAnswer, error) {
 	}, nil
 }
 
-func (l *LoginService) ConfirmLoginEmail(email string, code string, lang string) (*ConfirmLoginEmailAnswer, error) {
-	return nil, nil
+func (l *LoginService) validateConfirmLoginData(email string, code string) (*string, error) {
+	session, err := l.loginSessionRepository.FindByEmail(email)
+	if err != nil {
+		l.logger.Error(err)
+		return nil, commondomain.NewInternalError()
+	}
+	if session == nil {
+		return nil, domain.NewInvalidCodeError()
+	}
+	if session.CodeExpires.Before(time.Now()) {
+		return nil, domain.NewCodeExpiredError()
+	}
+
+	if code == "" || !hash.VerifyCode(session.Code, code) {
+		return nil, domain.NewInvalidCodeError()
+	}
+
+	return session.AccountId, nil
+}
+
+func (l *LoginService) ConfirmLogin(email string, code string) (string, error) {
+	errs := commondomain.NewValidationError()
+	l.validator.Var("email", email, "required,email", errs)
+	l.validator.Var("code", code, "required", errs)
+	if len(errs.FieldErrors) > 0 {
+		return "", errs
+	}
+
+	session, err := l.loginSessionRepository.FindByEmail(email)
+	if err != nil {
+		l.logger.Error(err)
+		return "", commondomain.NewInternalError()
+	}
+	if session == nil {
+		return "", domain.NewInvalidCodeError()
+	}
+	if session.CodeExpires.Before(time.Now()) {
+		return "", domain.NewCodeExpiredError()
+	}
+	if code == "" || !hash.VerifyCode(session.Code, code) {
+		return "", domain.NewInvalidCodeError()
+	}
+
+	accountId := session.AccountId
+
+	if accountId == nil {
+		return "", domain.NewInvalidCodeError()
+	}
+
+	if err := l.loginSessionRepository.DeleteByEmail(context.Background(), email); err != nil {
+		l.logger.Error(err)
+		return "", commondomain.NewInternalError()
+	}
+
+	return *accountId, nil
 }

@@ -4,6 +4,12 @@ other = "Неверный код"
 [codeExpired]
 other = "Срок действия кода истек"
 
+[invalidRefreshToken]
+other = "Недействительный refreshToken"
+
+[refreshTokenExpired]
+other = "Срок действия refreshToken истек"
+
 [internalError]
 other = "Внутренняя ошибка сервера"
 

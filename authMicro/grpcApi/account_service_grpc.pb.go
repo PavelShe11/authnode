@@ -19,10 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AccountService_CreateAccount_FullMethodName       = "/AccountService/createAccount"
-	AccountService_GetAccountByEmail_FullMethodName   = "/AccountService/getAccountByEmail"
-	AccountService_GetAccountById_FullMethodName      = "/AccountService/getAccountById"
-	AccountService_ValidateAccountData_FullMethodName = "/AccountService/validateAccountData"
+	AccountService_CreateAccount_FullMethodName         = "/AccountService/CreateAccount"
+	AccountService_GetAccountByEmail_FullMethodName     = "/AccountService/GetAccountByEmail"
+	AccountService_GetAccessTokenPayload_FullMethodName = "/AccountService/GetAccessTokenPayload"
+	AccountService_ValidateAccountData_FullMethodName   = "/AccountService/ValidateAccountData"
 )
 
 // AccountServiceClient is the client API for AccountService service.
@@ -31,7 +31,7 @@ const (
 type AccountServiceClient interface {
 	CreateAccount(ctx context.Context, in *CreateAccountRequest, opts ...grpc.CallOption) (*CreateAccountResponse, error)
 	GetAccountByEmail(ctx context.Context, in *GetAccountByEmailRequest, opts ...grpc.CallOption) (*GetAccountResponse, error)
-	GetAccountById(ctx context.Context, in *GetAccountByIdRequest, opts ...grpc.CallOption) (*GetAccountResponse, error)
+	GetAccessTokenPayload(ctx context.Context, in *GetAccessTokenPayloadRequest, opts ...grpc.CallOption) (*GetAccessTokenPayloadResponse, error)
 	ValidateAccountData(ctx context.Context, in *ValidateAccountRequest, opts ...grpc.CallOption) (*ValidateAccountResponse, error)
 }
 
@@ -63,10 +63,10 @@ func (c *accountServiceClient) GetAccountByEmail(ctx context.Context, in *GetAcc
 	return out, nil
 }
 
-func (c *accountServiceClient) GetAccountById(ctx context.Context, in *GetAccountByIdRequest, opts ...grpc.CallOption) (*GetAccountResponse, error) {
+func (c *accountServiceClient) GetAccessTokenPayload(ctx context.Context, in *GetAccessTokenPayloadRequest, opts ...grpc.CallOption) (*GetAccessTokenPayloadResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetAccountResponse)
-	err := c.cc.Invoke(ctx, AccountService_GetAccountById_FullMethodName, in, out, cOpts...)
+	out := new(GetAccessTokenPayloadResponse)
+	err := c.cc.Invoke(ctx, AccountService_GetAccessTokenPayload_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (c *accountServiceClient) ValidateAccountData(ctx context.Context, in *Vali
 type AccountServiceServer interface {
 	CreateAccount(context.Context, *CreateAccountRequest) (*CreateAccountResponse, error)
 	GetAccountByEmail(context.Context, *GetAccountByEmailRequest) (*GetAccountResponse, error)
-	GetAccountById(context.Context, *GetAccountByIdRequest) (*GetAccountResponse, error)
+	GetAccessTokenPayload(context.Context, *GetAccessTokenPayloadRequest) (*GetAccessTokenPayloadResponse, error)
 	ValidateAccountData(context.Context, *ValidateAccountRequest) (*ValidateAccountResponse, error)
 	mustEmbedUnimplementedAccountServiceServer()
 }
@@ -107,8 +107,8 @@ func (UnimplementedAccountServiceServer) CreateAccount(context.Context, *CreateA
 func (UnimplementedAccountServiceServer) GetAccountByEmail(context.Context, *GetAccountByEmailRequest) (*GetAccountResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetAccountByEmail not implemented")
 }
-func (UnimplementedAccountServiceServer) GetAccountById(context.Context, *GetAccountByIdRequest) (*GetAccountResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetAccountById not implemented")
+func (UnimplementedAccountServiceServer) GetAccessTokenPayload(context.Context, *GetAccessTokenPayloadRequest) (*GetAccessTokenPayloadResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetAccessTokenPayload not implemented")
 }
 func (UnimplementedAccountServiceServer) ValidateAccountData(context.Context, *ValidateAccountRequest) (*ValidateAccountResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ValidateAccountData not implemented")
@@ -170,20 +170,20 @@ func _AccountService_GetAccountByEmail_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AccountService_GetAccountById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetAccountByIdRequest)
+func _AccountService_GetAccessTokenPayload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAccessTokenPayloadRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AccountServiceServer).GetAccountById(ctx, in)
+		return srv.(AccountServiceServer).GetAccessTokenPayload(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AccountService_GetAccountById_FullMethodName,
+		FullMethod: AccountService_GetAccessTokenPayload_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AccountServiceServer).GetAccountById(ctx, req.(*GetAccountByIdRequest))
+		return srv.(AccountServiceServer).GetAccessTokenPayload(ctx, req.(*GetAccessTokenPayloadRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -214,19 +214,19 @@ var AccountService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*AccountServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "createAccount",
+			MethodName: "CreateAccount",
 			Handler:    _AccountService_CreateAccount_Handler,
 		},
 		{
-			MethodName: "getAccountByEmail",
+			MethodName: "GetAccountByEmail",
 			Handler:    _AccountService_GetAccountByEmail_Handler,
 		},
 		{
-			MethodName: "getAccountById",
-			Handler:    _AccountService_GetAccountById_Handler,
+			MethodName: "GetAccessTokenPayload",
+			Handler:    _AccountService_GetAccessTokenPayload_Handler,
 		},
 		{
-			MethodName: "validateAccountData",
+			MethodName: "ValidateAccountData",
 			Handler:    _AccountService_ValidateAccountData_Handler,
 		},
 	},

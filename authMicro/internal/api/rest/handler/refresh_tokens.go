@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/PavelShe11/studbridge/auth/internal/service"
 	"github.com/PavelShe11/studbridge/common/logger"
 
 	"net/http"
@@ -9,12 +10,14 @@ import (
 )
 
 type RefreshToken struct {
-	logger logger.Logger
+	logger       logger.Logger
+	tokenService *service.TokenService
 }
 
-func NewRefreshTokenHandler(logger logger.Logger) *RefreshToken {
+func NewRefreshTokenHandler(logger logger.Logger, tokenService *service.TokenService) *RefreshToken {
 	return &RefreshToken{
-		logger: logger,
+		logger:       logger,
+		tokenService: tokenService,
 	}
 }
 
@@ -24,5 +27,15 @@ func (h *RefreshToken) RefreshToken(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, req)
+	refreshToken, ok := req["refreshToken"].(string)
+	if !ok || refreshToken == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "refreshToken is required"})
+	}
+
+	tokens, err := h.tokenService.RefreshTokens(refreshToken)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, tokens)
 }

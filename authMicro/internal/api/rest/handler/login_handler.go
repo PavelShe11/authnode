@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"github.com/PavelShe11/studbridge/auth/internal/api/rest/httpErrorHandler"
 	"github.com/PavelShe11/studbridge/auth/internal/service"
 	"github.com/PavelShe11/studbridge/common/logger"
 
@@ -13,12 +12,14 @@ import (
 type Login struct {
 	logger       logger.Logger
 	loginService *service.LoginService
+	tokenService *service.TokenService
 }
 
-func NewLoginHandler(logger logger.Logger, loginService *service.LoginService) *Login {
+func NewLoginHandler(logger logger.Logger, loginService *service.LoginService, tokenService *service.TokenService) *Login {
 	return &Login{
 		logger:       logger,
 		loginService: loginService,
+		tokenService: tokenService,
 	}
 }
 
@@ -48,7 +49,6 @@ func (h *Login) ConfirmEmail(c echo.Context) error {
 		return err
 	}
 
-	lang := httpErrorHandler.GetLangFromHeader(c)
 	email, ok := req["email"].(string)
 	if !ok {
 		email = ""
@@ -58,10 +58,15 @@ func (h *Login) ConfirmEmail(c echo.Context) error {
 		code = ""
 	}
 
-	var answer, err = h.loginService.ConfirmLoginEmail(email, code, lang)
+	accountId, err := h.loginService.ConfirmLogin(email, code)
 	if err != nil {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, answer)
+	tokens, err := h.tokenService.CreateTokens(accountId)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, tokens)
 }

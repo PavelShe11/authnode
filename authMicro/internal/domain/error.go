@@ -29,11 +29,27 @@ func NewCodeExpiredError() *commondomain.BaseValidationError {
 	}
 }
 
-// NewValidationError creates a new instance of ValidationError
-func NewValidationError() *commondomain.BaseValidationError {
+// NewInvalidRefreshTokenError creates a new instance of InvalidRefreshToken error
+func NewInvalidRefreshTokenError() *commondomain.BaseValidationError {
 	return &commondomain.BaseValidationError{
-		BaseError:   commondomain.BaseError{Code: "validationError"},
-		FieldErrors: make([]commondomain.FieldError, 0),
+		BaseError: commondomain.BaseError{Code: "invalidRefreshToken"},
+		FieldErrors: []commondomain.FieldError{{
+			NameField: "refreshToken",
+			Message:   "invalidRefreshToken",
+			Params:    nil,
+		}},
+	}
+}
+
+// NewRefreshTokenExpiredError creates a new instance of RefreshTokenExpired error
+func NewRefreshTokenExpiredError() *commondomain.BaseValidationError {
+	return &commondomain.BaseValidationError{
+		BaseError: commondomain.BaseError{Code: "refreshTokenExpired"},
+		FieldErrors: []commondomain.FieldError{{
+			NameField: "refreshToken",
+			Message:   "refreshTokenExpired",
+			Params:    nil,
+		}},
 	}
 }
 
@@ -52,7 +68,7 @@ func GrpcErrorMapToError(grpcErr *grpcApi.Error) error {
 
 	switch grpcErr.Code {
 	case grpcApi.ErrorCode_VALIDATION:
-		validationError := NewValidationError()
+		validationError := commondomain.NewValidationError()
 		validationError.FieldErrors = fieldErrors
 		return validationError
 	default:

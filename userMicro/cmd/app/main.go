@@ -7,14 +7,13 @@ import (
 
 	"github.com/PavelShe11/studbridge/common/logger"
 	"github.com/PavelShe11/studbridge/common/translator"
+	"github.com/PavelShe11/studbridge/common/validation"
 	"github.com/PavelShe11/studbridge/user/internal/api/grpc"
 	"github.com/PavelShe11/studbridge/user/internal/api/grpc/accountGrpcService"
 	"github.com/PavelShe11/studbridge/user/internal/config"
 	"github.com/PavelShe11/studbridge/user/internal/repository"
 	"github.com/PavelShe11/studbridge/user/internal/repository/database"
 	"github.com/PavelShe11/studbridge/user/internal/service"
-	"github.com/PavelShe11/studbridge/user/utlis/validation"
-
 	"github.com/jmoiron/sqlx"
 )
 

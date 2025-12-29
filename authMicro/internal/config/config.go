@@ -53,9 +53,9 @@ func NewConfig() (*Config, []error) {
 			SSLMode:  getEnv("DBSSLMode", "disable"),
 		},
 		JWT: JWTConfig{
-			AccessTokenExpiration:  time.Duration(getEnvIsRequiredWithErrorsAsInt("JWTAccessTokenExpiration", &errors)) * time.Millisecond,
-			RefreshTokenExpiration: time.Duration(getEnvIsRequiredWithErrorsAsInt("JWTRefreshTokenExpiration", &errors)) * time.Millisecond,
-			Secret:                 getEnvIsRequiredWithErrors("JWTSecret", &errors),
+			AccessTokenExpiration:  time.Duration(getEnvIsRequiredWithErrorsAsInt("JWT_ACCESS_EXPIRATION", &errors)) * time.Minute,
+			RefreshTokenExpiration: time.Duration(getEnvIsRequiredWithErrorsAsInt("JWT_REFRESH_EXPIRATION", &errors)) * time.Minute,
+			Secret:                 getEnvIsRequiredWithErrors("JWT_SECRET", &errors),
 		},
 		HttpServerAddr: getEnv("HttpServerAddr", "0.0.0.0:80"),
 		AccountServiceGrpc: AccountServiceGrpcConfig{

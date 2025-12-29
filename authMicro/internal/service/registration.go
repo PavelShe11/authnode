@@ -116,7 +116,7 @@ func (r *RegistrationService) Register(userData map[string]any, lang string) (*R
 
 	var session *domain.RegistrationSession
 
-	if account, ok := accountGrpc.Result.(*grpcApi.GetAccountResponse_Account); ok && account != nil {
+	if account := accountGrpc.GetAccount(); account != nil {
 		session, err = r.createOrUpdateSession(email, "")
 		if err != nil {
 			r.logger.Error(err)

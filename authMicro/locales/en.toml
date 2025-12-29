@@ -4,6 +4,12 @@ other = "Invalid code"
 [codeExpired]
 other = "Code expired"
 
+[invalidRefreshToken]
+other = "Invalid refresh token"
+
+[refreshTokenExpired]
+other = "Refresh token has expired"
+
 [internalError]
 other = "Internal server error"
 

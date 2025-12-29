@@ -38,6 +38,13 @@ func NewInternalError() *BaseError {
 	return &BaseError{Code: "internalError"}
 }
 
+func NewValidationError() *BaseValidationError {
+	return &BaseValidationError{
+		BaseError:   BaseError{Code: "validationError"},
+		FieldErrors: make([]FieldError, 0),
+	}
+}
+
 // BaseError implements the error interface
 func (e *BaseError) Error() string {
 	return e.Name

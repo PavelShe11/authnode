@@ -65,14 +65,6 @@ func (a accountGrpcService) GetAccountByEmail(_ context.Context, request *grpcAp
 	)
 }
 
-func (a accountGrpcService) GetAccountById(_ context.Context, request *grpcApi.GetAccountByIdRequest) (*grpcApi.GetAccountResponse, error) {
-	return a.accountMapToGetAccountResponse(
-		a.accountService.GetAccountById(
-			request.GetAccountId(),
-		),
-	)
-}
-
 func (a accountGrpcService) accountMapToGetAccountResponse(account *domain.Account, err error) (*grpcApi.GetAccountResponse, error) {
 	if err != nil {
 		return &grpcApi.GetAccountResponse{
@@ -91,8 +83,8 @@ func (a accountGrpcService) accountMapToGetAccountResponse(account *domain.Accou
 	}
 
 	return &grpcApi.GetAccountResponse{
-		Result: &grpcApi.GetAccountResponse_Account{
-			Account: &grpcApi.GetAccountResponse_AccountWrapper{
+		Result: &grpcApi.GetAccountResponse_Account_{
+			Account: &grpcApi.GetAccountResponse_Account{
 				AccountId: account.Id,
 				Email:     account.Email,
 			},
@@ -151,6 +143,38 @@ func mapToGrpcError(e error) *grpcApi.Error {
 		Code:           grpcApi.ErrorCode_INTERNAL,
 		DetailedErrors: errs,
 	}
+}
+
+func (a accountGrpcService) GetAccessTokenPayload(
+	_ context.Context,
+	request *grpcApi.GetAccessTokenPayloadRequest,
+) (*grpcApi.GetAccessTokenPayloadResponse, error) {
+	// Получить account из БД по ID
+	account, err := a.accountService.GetAccountById(request.GetAccountId())
+
+	if err != nil {
+		return &grpcApi.GetAccessTokenPayloadResponse{
+			Result: &grpcApi.GetAccessTokenPayloadResponse_Error{
+				Error: mapToGrpcError(err),
+			},
+		}, nil
+	}
+
+	if account == nil {
+		return nil, nil
+	}
+
+	// Создать map с данными для токена
+	values := make(map[string]*structpb.Value)
+	values["sub"] = structpb.NewStringValue(account.Id)
+
+	return &grpcApi.GetAccessTokenPayloadResponse{
+		Result: &grpcApi.GetAccessTokenPayloadResponse_Claims{
+			Claims: &grpcApi.AccessTokenClaims{
+				Values: values,
+			},
+		},
+	}, nil
 }
 
 func getLangFromContext(ctx context.Context) string {

@@ -49,6 +49,15 @@ func (r *LoginSessionRepository) Save(session *domain.LoginSession) error {
 	return nil
 }
 
+func (r *LoginSessionRepository) DeleteByEmail(context context.Context, email string) error {
+	query := "DELETE FROM login_session WHERE email = $1"
+	_, err := r.db.ExecContext(context, query, email)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *LoginSessionRepository) CleanExpired(ctx context.Context) error {
 	query := "DELETE FROM login_session WHERE code_expires < NOW()"
 	_, err := r.db.ExecContext(ctx, query)

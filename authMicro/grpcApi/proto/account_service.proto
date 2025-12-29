@@ -6,44 +6,79 @@ import "google/protobuf/struct.proto";
 import "error.proto";
 
 service AccountService {
-  rpc createAccount(CreateAccountRequest) returns (CreateAccountResponse) {}
-  rpc getAccountByEmail(GetAccountByEmailRequest) returns (GetAccountResponse) {}
-  rpc getAccountById(GetAccountByIdRequest) returns (GetAccountResponse) {}
-  rpc validateAccountData(ValidateAccountRequest) returns (ValidateAccountResponse) {}
+  rpc CreateAccount(CreateAccountRequest) returns (CreateAccountResponse) {}
+  rpc GetAccountByEmail(GetAccountByEmailRequest) returns (GetAccountResponse) {}
+  rpc GetAccessTokenPayload(GetAccessTokenPayloadRequest) returns (GetAccessTokenPayloadResponse) {}
+  rpc ValidateAccountData(ValidateAccountRequest) returns (ValidateAccountResponse) {}
 }
 
-message ValidateAccountRequest {
-  map<string, google.protobuf.Value> userData = 1;
-}
-
-message ValidateAccountResponse {
-  optional Error error = 1;
-}
-
-message GetAccountByEmailRequest {
-  string email = 1;
-}
-
-message GetAccountByIdRequest {
-  string accountId = 1;
-}
-
-message GetAccountResponse {
-  oneof result {
-    AccountWrapper account = 1;
-    Error error = 2;
-  }
-
-  message AccountWrapper {
-    string accountId = 1;
-    string email = 2;
-  }
-}
+//
+// =====================
+// CreateAccount
+// =====================
+//
 
 message CreateAccountRequest {
   map<string, google.protobuf.Value> userData = 1;
 }
 
 message CreateAccountResponse {
+  optional Error error = 1;
+}
+
+//
+// =====================
+// GetAccountByEmail
+// =====================
+//
+
+message GetAccountByEmailRequest {
+  string email = 1;
+}
+
+message GetAccountResponse {
+  oneof result {
+    Account account = 1;
+    Error error = 2;
+  }
+
+  message Account {
+    string accountId = 1;
+    string email = 2;
+  }
+}
+
+//
+// =====================
+// GetAccessTokenPayload
+// =====================
+//
+
+message GetAccessTokenPayloadRequest {
+  string accountId = 1;
+}
+
+message GetAccessTokenPayloadResponse {
+  oneof result {
+    AccessTokenClaims claims = 1;
+      Error error = 2;
+  }
+}
+
+message AccessTokenClaims {
+  map<string, google.protobuf.Value> values = 1;
+}
+
+//
+// =====================
+// Validation
+// =====================
+//
+
+message ValidateAccountRequest {
+  map<string, google.protobuf.Value> userData = 1;
+}
+
+message ValidateAccountResponse {
   optional Error error = 1;
 }
