@@ -17,15 +17,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-/**
-TODO: Вход когда аккаунта ещё нет (фейковая сессия)
-TODO: Вход когда аккаунт существует (реальная сессия)
-TODO: Смена аккаунта
-- Пользователь создаёт сессию входа
-- Не завершая её удаляет аккаунт (через другую сессию)
-- Создаёт новый аккаунт с тем же email
-*/
-
 type LoginAnswer struct {
 	CodeExpires int64  `json:"code_expires"`
 	CodePattern string `json:"code_pattern"`
@@ -85,6 +76,19 @@ func (l *LoginService) getAccountByEmail(email string) (*grpcApi.GetAccountRespo
 		return nil, commonEntity.NewInternalError()
 	}
 	return accountGrpc, nil
+}
+
+func (l *LoginService) verifyAccountStillValid(email string, expectedAccountId string) (bool, error) {
+	accountGrpc, err := l.getAccountByEmail(email)
+	if err != nil {
+		return false, err
+	}
+
+	if account := accountGrpc.GetAccount(); account != nil && account.AccountId != "" {
+		return account.AccountId == expectedAccountId, nil
+	}
+
+	return false, nil
 }
 
 func (l *LoginService) createOrUpdateSession(email string, accountId *string, code string) (*entity.LoginSession, error) {
@@ -230,6 +234,19 @@ func (l *LoginService) ConfirmLogin(email string, code string) (string, error) {
 	accountId := session.AccountId
 
 	if accountId == nil {
+		return "", entity.NewInvalidCodeError()
+	}
+
+	accountStillValid, _ := l.verifyAccountStillValid(email, *accountId)
+
+	if !accountStillValid {
+		l.logger.Info(fmt.Sprintf("Account switch detected for email %s", email))
+
+		if err := l.loginSessionRepository.DeleteByEmail(context.Background(), email); err != nil {
+			l.logger.Error(fmt.Errorf("failed to delete session after account switch: %w", err))
+			return "", commonEntity.NewInternalError()
+		}
+
 		return "", entity.NewInvalidCodeError()
 	}
 
