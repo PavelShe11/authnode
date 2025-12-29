@@ -9,10 +9,7 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
-
-	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 func NewPostgresDB(cfg config.DBConfig) (*sqlx.DB, error) {
@@ -24,12 +21,10 @@ func NewPostgresDB(cfg config.DBConfig) (*sqlx.DB, error) {
 		return nil, err
 	}
 
-	// Configure connection pool
 	db.SetMaxOpenConns(20)
 	db.SetMaxIdleConns(5)
 	db.SetConnMaxLifetime(time.Hour)
 
-	// Check if connection is alive
 	if err := db.Ping(); err != nil {
 		return nil, err
 	}

@@ -1,10 +1,10 @@
 package service
 
 import (
-	commondomain "github.com/PavelShe11/studbridge/common/domain"
+	commonEntity "github.com/PavelShe11/studbridge/common/entity"
 	"github.com/PavelShe11/studbridge/common/logger"
 	"github.com/PavelShe11/studbridge/common/validation"
-	"github.com/PavelShe11/studbridge/user/internal/domain"
+	"github.com/PavelShe11/studbridge/user/internal/entity"
 	"github.com/PavelShe11/studbridge/user/internal/repository"
 )
 
@@ -26,7 +26,7 @@ func NewAccountService(
 	}
 }
 
-func (s *AccountService) CreateAccount(account domain.Account) error {
+func (s *AccountService) CreateAccount(account entity.Account) error {
 	errs := s.ValidateAccountData(account)
 	if errs != nil {
 		return errs
@@ -34,34 +34,34 @@ func (s *AccountService) CreateAccount(account domain.Account) error {
 	err := s.accountRepository.CreateAccount(account)
 	if err != nil {
 		s.logger.Error(err)
-		return commondomain.NewInternalError()
+		return commonEntity.NewInternalError()
 	}
 	return nil
 }
 
-func (s *AccountService) GetAccountByEmail(email string) (*domain.Account, error) {
+func (s *AccountService) GetAccountByEmail(email string) (*entity.Account, error) {
 	account, err := s.accountRepository.GetAccountByEmail(email)
 	if account == nil && err == nil {
 		return nil, nil
 	}
 	if err != nil {
 		s.logger.Error(err)
-		return nil, commondomain.NewInternalError()
+		return nil, commonEntity.NewInternalError()
 	}
 	return account, nil
 }
 
-func (s *AccountService) GetAccountById(id string) (*domain.Account, error) {
+func (s *AccountService) GetAccountById(id string) (*entity.Account, error) {
 	account, err := s.accountRepository.GetAccountById(id)
 	if err != nil {
 		s.logger.Error(err)
-		return nil, commondomain.NewInternalError()
+		return nil, commonEntity.NewInternalError()
 	}
 	return account, nil
 }
 
-func (s *AccountService) ValidateAccountData(account domain.Account) error {
-	errs := commondomain.NewValidationError()
+func (s *AccountService) ValidateAccountData(account entity.Account) error {
+	errs := commonEntity.NewValidationError()
 	errs.FieldErrors = s.validator.Struct(&account)
 	if len(errs.FieldErrors) > 0 {
 		return errs

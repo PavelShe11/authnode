@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/PavelShe11/studbridge/auth/internal/domain"
+	"github.com/PavelShe11/studbridge/auth/internal/entity"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -20,9 +20,9 @@ func NewRegistrationSessionRepository(db *sqlx.DB) *RegistrationSessionRepositor
 	}
 }
 
-func (r RegistrationSessionRepository) FindByEmail(email string) (*domain.RegistrationSession, error) {
+func (r RegistrationSessionRepository) FindByEmail(email string) (*entity.RegistrationSession, error) {
 	query := "SELECT * FROM registration_session WHERE email = $1"
-	result := &domain.RegistrationSession{}
+	result := &entity.RegistrationSession{}
 	row := r.db.QueryRowx(query, email)
 	err := row.StructScan(result)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -34,7 +34,7 @@ func (r RegistrationSessionRepository) FindByEmail(email string) (*domain.Regist
 	return result, nil
 }
 
-func (r RegistrationSessionRepository) Save(session *domain.RegistrationSession) error {
+func (r RegistrationSessionRepository) Save(session *entity.RegistrationSession) error {
 	query := `INSERT INTO registration_session (code, email, code_expires)
 	VALUES ($1, $2, $3)
 	ON CONFLICT (email)

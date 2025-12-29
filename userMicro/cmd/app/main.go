@@ -50,7 +50,6 @@ func main() {
 
 	grpcServer := grpc.NewGRPCServer(cfg.Grpc, l)
 
-	// Register service before starting server
 	accountGrpcService.Register(grpcServer.Server, *accountService, trans)
 
 	go func() {

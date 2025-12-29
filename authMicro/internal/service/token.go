@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/PavelShe11/studbridge/auth/internal/config"
-	"github.com/PavelShe11/studbridge/auth/internal/domain"
+	"github.com/PavelShe11/studbridge/auth/internal/entity"
 	"github.com/PavelShe11/studbridge/auth/internal/repository"
 	"github.com/PavelShe11/studbridge/authMicro/grpcApi"
-	commondomain "github.com/PavelShe11/studbridge/common/domain"
+	commonEntity "github.com/PavelShe11/studbridge/common/entity"
 	"github.com/PavelShe11/studbridge/common/logger"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -54,12 +54,12 @@ func (s *TokenService) CreateTokens(accountId string) (*Tokens, error) {
 	)
 	if err != nil {
 		s.logger.Error(fmt.Errorf("failed to get token payload: %w", err))
-		return nil, commondomain.NewInternalError()
+		return nil, commonEntity.NewInternalError()
 	}
 
 	if grpcError := payloadResp.GetError(); grpcError != nil {
 		s.logger.Error("user service returned error for token payload")
-		return nil, domain.GrpcErrorMapToError(grpcError)
+		return nil, entity.GrpcErrorMapToError(grpcError)
 	}
 
 	claimsResult := payloadResp.GetClaims()
@@ -95,16 +95,16 @@ func (s *TokenService) CreateTokens(accountId string) (*Tokens, error) {
 	refreshTokenString, err := refreshToken.SignedString([]byte(s.jwtConfig.Secret))
 	if err != nil {
 		s.logger.Error(fmt.Errorf("failed to sign refresh token: %w", err))
-		return nil, commondomain.NewInternalError()
+		return nil, commonEntity.NewInternalError()
 	}
 
 	accessTokenString, err := accessToken.SignedString([]byte(s.jwtConfig.Secret))
 	if err != nil {
 		s.logger.Error(fmt.Errorf("failed to sign access token: %w", err))
-		return nil, commondomain.NewInternalError()
+		return nil, commonEntity.NewInternalError()
 	}
 
-	session := &domain.RefreshTokenSession{
+	session := &entity.RefreshTokenSession{
 		AccountID:    accountId,
 		RefreshToken: refreshTokenString,
 		ExpiresAt:    refreshExpiry,
@@ -112,7 +112,7 @@ func (s *TokenService) CreateTokens(accountId string) (*Tokens, error) {
 
 	if err := s.refreshTokenSessionRepo.Save(session); err != nil {
 		s.logger.Error(fmt.Errorf("failed to save refresh token session: %w", err))
-		return nil, commondomain.NewInternalError()
+		return nil, commonEntity.NewInternalError()
 	}
 
 	return &Tokens{
@@ -138,27 +138,27 @@ func (s *TokenService) RefreshTokens(refreshTokenString string) (*Tokens, error)
 
 	if err != nil || !token.Valid {
 		s.logger.Debug(err)
-		return nil, domain.NewInvalidRefreshTokenError()
+		return nil, entity.NewInvalidRefreshTokenError()
 	}
 
 	sub, ok := claims["sub"].(string)
 	if !ok || sub == "" {
 		s.logger.Error("sub not found in refresh token")
-		return nil, domain.NewInvalidRefreshTokenError()
+		return nil, entity.NewInvalidRefreshTokenError()
 	}
 
 	session, err := s.refreshTokenSessionRepo.FindByToken(refreshTokenString)
 	if err != nil {
 		s.logger.Error(err)
-		return nil, commondomain.NewInternalError()
+		return nil, commonEntity.NewInternalError()
 	}
 	if session == nil {
-		return nil, domain.NewInvalidRefreshTokenError()
+		return nil, entity.NewInvalidRefreshTokenError()
 	}
 
 	if session.ExpiresAt.Before(time.Now()) {
 		_ = s.refreshTokenSessionRepo.DeleteByToken(refreshTokenString)
-		return nil, domain.NewRefreshTokenExpiredError()
+		return nil, entity.NewRefreshTokenExpiredError()
 	}
 
 	if err := s.refreshTokenSessionRepo.DeleteByToken(refreshTokenString); err != nil {

@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/PavelShe11/studbridge/common/domain"
+	"github.com/PavelShe11/studbridge/common/entity"
 	"github.com/PavelShe11/studbridge/common/logger"
 
 	"github.com/BurntSushi/toml"
@@ -39,14 +39,12 @@ func NewTranslator(log logger.Logger) *Translator {
 			continue
 		}
 
-		// Validate filename as a language tag
 		langTag := strings.TrimSuffix(entry.Name(), ".toml")
 		if _, err := language.Parse(langTag); err != nil {
 			log.Warnf("skipping file with invalid language tag in filename: %s (%v)", entry.Name(), err)
 			continue
 		}
 
-		// Load messageFile
 		filePath := filepath.Join(localesDir, entry.Name())
 		messageFile, err := bundle.LoadMessageFile(filePath)
 		if err != nil {
@@ -73,7 +71,7 @@ func (t *Translator) TranslateError(err error, langs ...string) {
 		return
 	}
 
-	var translatableErr domain.TranslatableError
+	var translatableErr entity.TranslatableError
 	ok := errors.As(err, &translatableErr)
 	if !ok {
 		t.log.Warnf("TranslateError called with non-translatable error type: %T", err)
@@ -82,9 +80,7 @@ func (t *Translator) TranslateError(err error, langs ...string) {
 
 	localizer := i18n.NewLocalizer(t.bundle, langs...)
 
-	// Pass translate function to the error via polymorphism
 	translatableErr.Translate(func(msgID string, params map[string]interface{}) string {
-		// If ID is not known, return as-is (might be already translated from another service)
 		if _, ok := t.knownIDs[msgID]; !ok {
 			return msgID
 		}
@@ -94,7 +90,6 @@ func (t *Translator) TranslateError(err error, langs ...string) {
 			TemplateData: params,
 		})
 		if err != nil {
-			// Log at debug level - might be template issue, but not critical
 			t.log.Debugf("could not translate message '%s': %v", msgID, err)
 			return msgID
 		}

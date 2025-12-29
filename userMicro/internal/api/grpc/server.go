@@ -18,10 +18,8 @@ type Service struct {
 }
 
 func NewGRPCServer(config config.GRPCConfig, logger logger.Logger) *Service {
-	// Create internal auth interceptor for microservice-to-microservice authentication
 	authInterceptor := interceptor.UnaryServerInternalAuthInterceptor(config.InternalAPIKey, logger)
 
-	// Create server with interceptor
 	server := grpc.NewServer(
 		grpc.UnaryInterceptor(authInterceptor),
 	)

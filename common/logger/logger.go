@@ -30,12 +30,11 @@ type zapLogger struct {
 func NewLogger() Logger {
 	format := getLogFormat()
 
-	// Выбрать encoder в зависимости от формата
 	var levelEncoder zapcore.LevelEncoder
 	if format == "json" {
-		levelEncoder = zapcore.CapitalLevelEncoder // Без цветов для JSON
+		levelEncoder = zapcore.CapitalLevelEncoder
 	} else {
-		levelEncoder = zapcore.CapitalColorLevelEncoder // С цветами для console
+		levelEncoder = zapcore.CapitalColorLevelEncoder
 	}
 
 	encoderConfig := zapcore.EncoderConfig{

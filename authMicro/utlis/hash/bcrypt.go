@@ -5,8 +5,6 @@ import (
 )
 
 const (
-	// DefaultCost represents bcrypt cost factor (2^12 iterations)
-	// Balances security vs performance for verification codes (~250-400ms)
 	DefaultCost = 12
 )
 

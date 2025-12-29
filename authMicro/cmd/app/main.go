@@ -41,7 +41,6 @@ func main() {
 		return
 	}
 
-	// grpcService
 	var transportOption grpc.DialOption
 	if os.Getenv("USE_ALTS") == "true" {
 		altsTC := alts.NewClientCreds(alts.DefaultClientOptions())
@@ -50,7 +49,6 @@ func main() {
 		transportOption = grpc.WithTransportCredentials(insecure.NewCredentials())
 	}
 
-	// Create internal auth interceptor for microservice-to-microservice authentication
 	authInterceptor := interceptor.UnaryClientInternalAuthInterceptor(cfg.AccountServiceGrpc.InternalAPIKey, l)
 
 	conn, err := grpc.NewClient(
@@ -64,7 +62,6 @@ func main() {
 
 	accountServiceClient := grpcApi.NewAccountServiceClient(conn)
 
-	// database
 	db, err := database.NewPostgresDB(cfg.DB)
 	if err != nil {
 		l.Fatalf("Failed to initialize database connection: %v", err)
@@ -85,12 +82,10 @@ func main() {
 	loginSessionRepository := repository.NewLoginSessionRepository(db)
 	refreshTokenSessionRepository := repository.NewRefreshTokenSessionRepository(db)
 
-	// services
 	registrationService := service.NewRegistrationService(*registrationSessionRepository, accountServiceClient, l, &cfg.CodeGenConfig)
 	loginService := service.NewLoginService(*loginSessionRepository, accountServiceClient, l, &cfg.CodeGenConfig, v)
 	tokenService := service.NewTokenService(&cfg.JWT, refreshTokenSessionRepository, accountServiceClient, l)
 
-	// REST server
 	router := rest.NewRouter(
 		l,
 		trans,

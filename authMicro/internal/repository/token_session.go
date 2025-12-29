@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/PavelShe11/studbridge/auth/internal/domain"
+	"github.com/PavelShe11/studbridge/auth/internal/entity"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -17,7 +17,7 @@ func NewRefreshTokenSessionRepository(db *sqlx.DB) *RefreshTokenSessionRepositor
 }
 
 // Save сохраняет новую сессию refresh token
-func (r *RefreshTokenSessionRepository) Save(session *domain.RefreshTokenSession) error {
+func (r *RefreshTokenSessionRepository) Save(session *entity.RefreshTokenSession) error {
 	query := `
 		INSERT INTO refresh_token_session (account_id, refresh_token, expires_at)
 		VALUES ($1, $2, $3)
@@ -31,8 +31,8 @@ func (r *RefreshTokenSessionRepository) Save(session *domain.RefreshTokenSession
 }
 
 // FindByToken находит сессию по токену
-func (r *RefreshTokenSessionRepository) FindByToken(token string) (*domain.RefreshTokenSession, error) {
-	var session domain.RefreshTokenSession
+func (r *RefreshTokenSessionRepository) FindByToken(token string) (*entity.RefreshTokenSession, error) {
+	var session entity.RefreshTokenSession
 	query := `SELECT * FROM refresh_token_session WHERE refresh_token = $1`
 	err := r.db.Get(&session, query, token)
 	if err == sql.ErrNoRows {

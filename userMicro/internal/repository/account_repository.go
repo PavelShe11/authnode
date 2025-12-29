@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/PavelShe11/studbridge/user/internal/domain"
+	"github.com/PavelShe11/studbridge/user/internal/entity"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -19,7 +19,7 @@ func NewAccountRepository(db *sqlx.DB) *AccountRepository {
 	}
 }
 
-func (a *AccountRepository) CreateAccount(account domain.Account) error {
+func (a *AccountRepository) CreateAccount(account entity.Account) error {
 	query := "INSERT INTO account (first_name, last_name, email) VALUES (:first_name, :last_name, :email)"
 	_, err := a.db.NamedExec(query, account)
 	if err != nil {
@@ -28,8 +28,8 @@ func (a *AccountRepository) CreateAccount(account domain.Account) error {
 	return nil
 }
 
-func (a *AccountRepository) GetAccountByEmail(email string) (*domain.Account, error) {
-	account := domain.Account{}
+func (a *AccountRepository) GetAccountByEmail(email string) (*entity.Account, error) {
+	account := entity.Account{}
 	query := "SELECT * FROM account WHERE email=$1"
 	row := a.db.QueryRowx(query, email)
 	err := row.StructScan(&account)
@@ -42,8 +42,8 @@ func (a *AccountRepository) GetAccountByEmail(email string) (*domain.Account, er
 	return &account, nil
 }
 
-func (a *AccountRepository) GetAccountById(id string) (*domain.Account, error) {
-	account := domain.Account{}
+func (a *AccountRepository) GetAccountById(id string) (*entity.Account, error) {
+	account := entity.Account{}
 	query := "SELECT * FROM account WHERE id=$1"
 	row := a.db.QueryRowx(query, id)
 	err := row.StructScan(&account)

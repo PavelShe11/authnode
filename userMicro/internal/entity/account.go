@@ -1,4 +1,4 @@
-package domain
+package entity
 
 type Account struct {
 	Id        string `json:"id" db:"id"`

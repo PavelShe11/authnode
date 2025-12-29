@@ -5,9 +5,9 @@ import (
 	"errors"
 
 	"github.com/PavelShe11/studbridge/authMicro/grpcApi"
-	commondomain "github.com/PavelShe11/studbridge/common/domain"
+	commonEntity "github.com/PavelShe11/studbridge/common/entity"
 	"github.com/PavelShe11/studbridge/common/translator"
-	"github.com/PavelShe11/studbridge/user/internal/domain"
+	"github.com/PavelShe11/studbridge/user/internal/entity"
 	"github.com/PavelShe11/studbridge/user/internal/service"
 
 	"google.golang.org/grpc"
@@ -42,7 +42,7 @@ func valueToString(m map[string]*structpb.Value, key string) string {
 func (a accountGrpcService) CreateAccount(ctx context.Context, request *grpcApi.CreateAccountRequest) (*grpcApi.CreateAccountResponse, error) {
 	lang := getLangFromContext(ctx)
 
-	err := a.accountService.CreateAccount(domain.Account{
+	err := a.accountService.CreateAccount(entity.Account{
 		FirstName: valueToString(request.UserData, "firstName"),
 		LastName:  valueToString(request.UserData, "lastName"),
 		Email:     valueToString(request.UserData, "email"),
@@ -65,7 +65,7 @@ func (a accountGrpcService) GetAccountByEmail(_ context.Context, request *grpcAp
 	)
 }
 
-func (a accountGrpcService) accountMapToGetAccountResponse(account *domain.Account, err error) (*grpcApi.GetAccountResponse, error) {
+func (a accountGrpcService) accountMapToGetAccountResponse(account *entity.Account, err error) (*grpcApi.GetAccountResponse, error) {
 	if err != nil {
 		return &grpcApi.GetAccountResponse{
 			Result: &grpcApi.GetAccountResponse_Error{
@@ -95,7 +95,7 @@ func (a accountGrpcService) accountMapToGetAccountResponse(account *domain.Accou
 func (a accountGrpcService) ValidateAccountData(ctx context.Context, request *grpcApi.ValidateAccountRequest) (*grpcApi.ValidateAccountResponse, error) {
 	lang := getLangFromContext(ctx)
 
-	err := a.accountService.ValidateAccountData(domain.Account{
+	err := a.accountService.ValidateAccountData(entity.Account{
 		FirstName: valueToString(request.UserData, "firstName"),
 		LastName:  valueToString(request.UserData, "lastName"),
 		Email:     valueToString(request.UserData, "email"),
@@ -117,7 +117,7 @@ func mapToGrpcError(e error) *grpcApi.Error {
 
 	errs := make([]*grpcApi.Error_FieldError, 0)
 
-	var validErr *commondomain.BaseValidationError
+	var validErr *commonEntity.BaseValidationError
 	if errors.As(e, &validErr) {
 		for _, err := range validErr.FieldErrors {
 			errs = append(errs, &grpcApi.Error_FieldError{
@@ -131,7 +131,7 @@ func mapToGrpcError(e error) *grpcApi.Error {
 		}
 	}
 
-	var baseError *commondomain.BaseError
+	var baseError *commonEntity.BaseError
 	if errors.As(e, &baseError) {
 		return &grpcApi.Error{
 			Code:           grpcApi.ErrorCode_INTERNAL,
@@ -149,7 +149,6 @@ func (a accountGrpcService) GetAccessTokenPayload(
 	_ context.Context,
 	request *grpcApi.GetAccessTokenPayloadRequest,
 ) (*grpcApi.GetAccessTokenPayloadResponse, error) {
-	// Получить account из БД по ID
 	account, err := a.accountService.GetAccountById(request.GetAccountId())
 
 	if err != nil {
@@ -164,7 +163,6 @@ func (a accountGrpcService) GetAccessTokenPayload(
 		return nil, nil
 	}
 
-	// Создать map с данными для токена
 	values := make(map[string]*structpb.Value)
 	values["sub"] = structpb.NewStringValue(account.Id)
 

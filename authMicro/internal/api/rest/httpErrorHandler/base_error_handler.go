@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	commondomain "github.com/PavelShe11/studbridge/common/domain"
+	commonEntity "github.com/PavelShe11/studbridge/common/entity"
 	"github.com/PavelShe11/studbridge/common/logger"
 	"github.com/PavelShe11/studbridge/common/translator"
 
@@ -24,7 +24,7 @@ func NewBaseErrorHandler(translator *translator.Translator, log logger.Logger) D
 }
 
 func (h *baseErrorhandler) handle(err error, c echo.Context) bool {
-	var domainErr commondomain.AbstractError
+	var domainErr commonEntity.AbstractError
 	ok := errors.As(err, &domainErr)
 	if !ok {
 		return false
@@ -33,7 +33,7 @@ func (h *baseErrorhandler) handle(err error, c echo.Context) bool {
 	statusCode, err := getStatusCodeForBaseError(domainErr.GetCode())
 	if err != nil {
 		statusCode = http.StatusInternalServerError
-		domainErr = commondomain.NewInternalError()
+		domainErr = commonEntity.NewInternalError()
 	}
 
 	lang := GetLangFromHeader(c)

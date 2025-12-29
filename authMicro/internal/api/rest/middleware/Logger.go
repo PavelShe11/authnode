@@ -52,7 +52,6 @@ func formatBodyForLog(body []byte, maxSize int) string {
 	}
 	var js interface{}
 	if err := json.Unmarshal(body, &js); err != nil {
-		// Не JSON - вернуть как есть (убрать trailing newlines)
 		str := strings.TrimRight(string(body), "\n\r")
 		if len(str) > maxSize {
 			return str[:maxSize] + "..."

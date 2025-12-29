@@ -24,12 +24,10 @@ func UnaryClientInternalAuthInterceptor(apiKey string, logger logger.Logger) grp
 		invoker grpc.UnaryInvoker,
 		opts ...grpc.CallOption,
 	) error {
-		// Create new context with internal API key metadata
 		ctx = metadata.AppendToOutgoingContext(ctx, internalAPIKeyHeader, apiKey)
 
 		logger.Infof("Added internal API key to gRPC request: %s", method)
 
-		// Invoke the remote method with the modified context
 		return invoker(ctx, method, req, reply, cc, opts...)
 	}
 }

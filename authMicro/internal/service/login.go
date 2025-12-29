@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/PavelShe11/studbridge/auth/internal/config"
-	"github.com/PavelShe11/studbridge/auth/internal/domain"
+	"github.com/PavelShe11/studbridge/auth/internal/entity"
 	"github.com/PavelShe11/studbridge/auth/internal/repository"
 	"github.com/PavelShe11/studbridge/auth/utlis/generator"
 	"github.com/PavelShe11/studbridge/auth/utlis/hash"
 	"github.com/PavelShe11/studbridge/authMicro/grpcApi"
-	commondomain "github.com/PavelShe11/studbridge/common/domain"
+	commonEntity "github.com/PavelShe11/studbridge/common/entity"
 	"github.com/PavelShe11/studbridge/common/logger"
 	"github.com/PavelShe11/studbridge/common/validation"
 	"google.golang.org/grpc/status"
@@ -82,12 +82,12 @@ func (l *LoginService) getAccountByEmail(email string) (*grpcApi.GetAccountRespo
 	if err != nil {
 		st, _ := status.FromError(err)
 		l.logger.Error(fmt.Errorf("GetAccountByEmail error: %v, grpc status: %v", err, st))
-		return nil, commondomain.NewInternalError()
+		return nil, commonEntity.NewInternalError()
 	}
 	return accountGrpc, nil
 }
 
-func (l *LoginService) createOrUpdateSession(email string, accountId *string, code string) (*domain.LoginSession, error) {
+func (l *LoginService) createOrUpdateSession(email string, accountId *string, code string) (*entity.LoginSession, error) {
 	session, err := l.loginSessionRepository.FindByEmail(email)
 	if err != nil {
 		l.logger.Error(err)
@@ -99,12 +99,12 @@ func (l *LoginService) createOrUpdateSession(email string, accountId *string, co
 		code, err = hash.HashCode(code)
 		if err != nil {
 			l.logger.Error(fmt.Errorf("failed to hash verification code: %w", err))
-			return nil, commondomain.NewInternalError()
+			return nil, commonEntity.NewInternalError()
 		}
 	}
 
 	if session == nil {
-		session = &domain.LoginSession{
+		session = &entity.LoginSession{
 			AccountId:   accountId,
 			Email:       email,
 			Code:        code,
@@ -140,7 +140,7 @@ func (l *LoginService) createOrUpdateSession(email string, accountId *string, co
 func (l *LoginService) Login(email string) (*LoginAnswer, error) {
 	l.cleanupExpiredSessions()
 
-	errs := commondomain.NewValidationError()
+	errs := commonEntity.NewValidationError()
 	l.validator.Var("email", email, "required,email", errs)
 	if len(errs.FieldErrors) > 0 {
 		return nil, errs
@@ -156,19 +156,19 @@ func (l *LoginService) Login(email string) (*LoginAnswer, error) {
 		accountId = &account.AccountId
 	}
 
-	var session *domain.LoginSession
+	var session *entity.LoginSession
 
 	if accountId != nil {
 		plaintextCode, err := generator.Reggen(l.CodeGenConfig.CodePattern, l.CodeGenConfig.CodeMaxLength)
 		if err != nil {
 			l.logger.Error(err)
-			return nil, commondomain.NewInternalError()
+			return nil, commonEntity.NewInternalError()
 		}
 
 		session, err = l.createOrUpdateSession(email, accountId, plaintextCode)
 		if err != nil {
 			l.logger.Error(fmt.Errorf("failed to create or update login session: %w", err))
-			return nil, commondomain.NewInternalError()
+			return nil, commonEntity.NewInternalError()
 		}
 	} else {
 		session, err = l.createOrUpdateSession(email, nil, "")
@@ -188,24 +188,24 @@ func (l *LoginService) validateConfirmLoginData(email string, code string) (*str
 	session, err := l.loginSessionRepository.FindByEmail(email)
 	if err != nil {
 		l.logger.Error(err)
-		return nil, commondomain.NewInternalError()
+		return nil, commonEntity.NewInternalError()
 	}
 	if session == nil {
-		return nil, domain.NewInvalidCodeError()
+		return nil, entity.NewInvalidCodeError()
 	}
 	if session.CodeExpires.Before(time.Now()) {
-		return nil, domain.NewCodeExpiredError()
+		return nil, entity.NewCodeExpiredError()
 	}
 
 	if code == "" || !hash.VerifyCode(session.Code, code) {
-		return nil, domain.NewInvalidCodeError()
+		return nil, entity.NewInvalidCodeError()
 	}
 
 	return session.AccountId, nil
 }
 
 func (l *LoginService) ConfirmLogin(email string, code string) (string, error) {
-	errs := commondomain.NewValidationError()
+	errs := commonEntity.NewValidationError()
 	l.validator.Var("email", email, "required,email", errs)
 	l.validator.Var("code", code, "required", errs)
 	if len(errs.FieldErrors) > 0 {
@@ -215,27 +215,27 @@ func (l *LoginService) ConfirmLogin(email string, code string) (string, error) {
 	session, err := l.loginSessionRepository.FindByEmail(email)
 	if err != nil {
 		l.logger.Error(err)
-		return "", commondomain.NewInternalError()
+		return "", commonEntity.NewInternalError()
 	}
 	if session == nil {
-		return "", domain.NewInvalidCodeError()
+		return "", entity.NewInvalidCodeError()
 	}
 	if session.CodeExpires.Before(time.Now()) {
-		return "", domain.NewCodeExpiredError()
+		return "", entity.NewCodeExpiredError()
 	}
 	if code == "" || !hash.VerifyCode(session.Code, code) {
-		return "", domain.NewInvalidCodeError()
+		return "", entity.NewInvalidCodeError()
 	}
 
 	accountId := session.AccountId
 
 	if accountId == nil {
-		return "", domain.NewInvalidCodeError()
+		return "", entity.NewInvalidCodeError()
 	}
 
 	if err := l.loginSessionRepository.DeleteByEmail(context.Background(), email); err != nil {
 		l.logger.Error(err)
-		return "", commondomain.NewInternalError()
+		return "", commonEntity.NewInternalError()
 	}
 
 	return *accountId, nil
