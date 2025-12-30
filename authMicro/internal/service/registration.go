@@ -166,7 +166,7 @@ func (r *RegistrationService) createOrUpdateSession(email string, code string) (
 			CodeExpires: time.Now().Add(r.CodeGenConfig.CodeTTL),
 			CreateAt:    time.Now(),
 		}
-	} else if session.CodeExpires.Before(time.Now()) {
+	} else if session.CodeExpires.Before(time.Now()) || (session.Code == "" && code != "") {
 		session.Code = code
 		session.CodeExpires = time.Now().Add(r.CodeGenConfig.CodeTTL)
 	} else {
