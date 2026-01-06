@@ -3,8 +3,9 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 
-	"github.com/PavelShe11/studbridge/auth/internal/entity"
+	"github.com/PavelShe11/studbridge/authMicro/internal/entity"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -17,13 +18,18 @@ func NewRefreshTokenSessionRepository(db *sqlx.DB) *RefreshTokenSessionRepositor
 }
 
 // Save сохраняет новую сессию refresh token
-func (r *RefreshTokenSessionRepository) Save(session *entity.RefreshTokenSession) error {
+func (r *RefreshTokenSessionRepository) Save(
+	ctx context.Context,
+	session *entity.RefreshTokenSession,
+) error {
 	query := `
 		INSERT INTO refresh_token_session (account_id, refresh_token, expires_at)
 		VALUES ($1, $2, $3)
 		RETURNING id, created_at
 	`
-	return r.db.QueryRowx(query,
+	return r.db.QueryRowxContext(
+		ctx,
+		query,
 		session.AccountID,
 		session.RefreshToken,
 		session.ExpiresAt,
@@ -31,20 +37,23 @@ func (r *RefreshTokenSessionRepository) Save(session *entity.RefreshTokenSession
 }
 
 // FindByToken находит сессию по токену
-func (r *RefreshTokenSessionRepository) FindByToken(token string) (*entity.RefreshTokenSession, error) {
+func (r *RefreshTokenSessionRepository) FindByToken(
+	ctx context.Context,
+	token string,
+) (*entity.RefreshTokenSession, error) {
 	var session entity.RefreshTokenSession
 	query := `SELECT * FROM refresh_token_session WHERE refresh_token = $1`
-	err := r.db.Get(&session, query, token)
-	if err == sql.ErrNoRows {
+	err := r.db.GetContext(ctx, &session, query, token)
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
 	return &session, err
 }
 
 // DeleteByToken удаляет сессию по токену
-func (r *RefreshTokenSessionRepository) DeleteByToken(token string) error {
+func (r *RefreshTokenSessionRepository) DeleteByToken(ctx context.Context, token string) error {
 	query := `DELETE FROM refresh_token_session WHERE refresh_token = $1`
-	_, err := r.db.Exec(query, token)
+	_, err := r.db.ExecContext(ctx, query, token)
 	return err
 }
 

@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+
 	commonEntity "github.com/PavelShe11/studbridge/common/entity"
 	"github.com/PavelShe11/studbridge/common/logger"
 	"github.com/PavelShe11/studbridge/common/validation"
@@ -26,12 +28,12 @@ func NewAccountService(
 	}
 }
 
-func (s *AccountService) CreateAccount(account entity.Account) error {
+func (s *AccountService) CreateAccount(ctx context.Context, account entity.Account) error {
 	errs := s.ValidateAccountData(account)
 	if errs != nil {
 		return errs
 	}
-	err := s.accountRepository.CreateAccount(account)
+	err := s.accountRepository.CreateAccount(ctx, account)
 	if err != nil {
 		s.logger.Error(err)
 		return commonEntity.NewInternalError()
@@ -39,8 +41,8 @@ func (s *AccountService) CreateAccount(account entity.Account) error {
 	return nil
 }
 
-func (s *AccountService) GetAccountByEmail(email string) (*entity.Account, error) {
-	account, err := s.accountRepository.GetAccountByEmail(email)
+func (s *AccountService) GetAccountByEmail(ctx context.Context, email string) (*entity.Account, error) {
+	account, err := s.accountRepository.GetAccountByEmail(ctx, email)
 	if account == nil && err == nil {
 		return nil, nil
 	}
@@ -51,8 +53,8 @@ func (s *AccountService) GetAccountByEmail(email string) (*entity.Account, error
 	return account, nil
 }
 
-func (s *AccountService) GetAccountById(id string) (*entity.Account, error) {
-	account, err := s.accountRepository.GetAccountById(id)
+func (s *AccountService) GetAccountById(ctx context.Context, id string) (*entity.Account, error) {
+	account, err := s.accountRepository.GetAccountById(ctx, id)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, commonEntity.NewInternalError()

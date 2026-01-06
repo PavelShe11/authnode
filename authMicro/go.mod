@@ -1,4 +1,4 @@
-module github.com/PavelShe11/studbridge/auth
+module github.com/PavelShe11/studbridge/authMicro
 
 go 1.25.5
 

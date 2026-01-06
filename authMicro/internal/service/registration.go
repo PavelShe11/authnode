@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/PavelShe11/studbridge/auth/internal/config"
-	"github.com/PavelShe11/studbridge/auth/internal/entity"
-	"github.com/PavelShe11/studbridge/auth/internal/repository"
-	"github.com/PavelShe11/studbridge/auth/utlis/converter"
-	"github.com/PavelShe11/studbridge/auth/utlis/generator"
-	"github.com/PavelShe11/studbridge/auth/utlis/hash"
 	"github.com/PavelShe11/studbridge/authMicro/grpcApi"
+	"github.com/PavelShe11/studbridge/authMicro/internal/config"
+	"github.com/PavelShe11/studbridge/authMicro/internal/entity"
+	"github.com/PavelShe11/studbridge/authMicro/internal/repository"
+	"github.com/PavelShe11/studbridge/authMicro/utlis/converter"
+	"github.com/PavelShe11/studbridge/authMicro/utlis/generator"
+	"github.com/PavelShe11/studbridge/authMicro/utlis/hash"
 	commonEntity "github.com/PavelShe11/studbridge/common/entity"
 	"github.com/PavelShe11/studbridge/common/logger"
 
@@ -42,15 +42,12 @@ func NewRegistrationService(registrationSessionRepository *repository.Registrati
 	}
 }
 
-func (r *RegistrationService) validateRegistrationData(userData map[string]any, lang string) (map[string]*structpb.Value, error) {
+func (r *RegistrationService) validateRegistrationData(ctx context.Context, userData map[string]any, lang string) (map[string]*structpb.Value, error) {
 	grpcMap, err := converter.ConvertToGrpcMap(userData)
 	if err != nil {
 		r.logger.Error(err)
 		return nil, err
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
 
 	md := metadata.Pairs("lang", lang)
 	ctx = metadata.NewOutgoingContext(ctx, md)
@@ -71,11 +68,9 @@ func (r *RegistrationService) validateRegistrationData(userData map[string]any, 
 	return grpcMap, nil
 }
 
-func (r *RegistrationService) getAccountByEmail(email string) (*grpcApi.GetAccountResponse, error) {
-	ctxG, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+func (r *RegistrationService) getAccountByEmail(ctx context.Context, email string) (*grpcApi.GetAccountResponse, error) {
 	accountGrpc, err := r.accountServiceClient.GetAccountByEmail(
-		ctxG,
+		ctx,
 		&grpcApi.GetAccountByEmailRequest{Email: email},
 	)
 
@@ -87,18 +82,16 @@ func (r *RegistrationService) getAccountByEmail(email string) (*grpcApi.GetAccou
 	return accountGrpc, nil
 }
 
-func (r *RegistrationService) cleanupExpiredSessions() {
-	cleanupCtx, cancelCleanup := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancelCleanup()
-	if err := r.registrationSessionRepository.CleanExpired(cleanupCtx); err != nil {
+func (r *RegistrationService) cleanupExpiredSessions(ctx context.Context) {
+	if err := r.registrationSessionRepository.CleanExpired(ctx); err != nil {
 		r.logger.Error(fmt.Errorf("error cleaning expired registration sessions: %w", err))
 	}
 }
 
-func (r *RegistrationService) Register(userData map[string]any, lang string) (*RegisterAnswer, error) {
-	r.cleanupExpiredSessions()
+func (r *RegistrationService) Register(ctx context.Context, userData map[string]any, lang string) (*RegisterAnswer, error) {
+	r.cleanupExpiredSessions(ctx)
 
-	if _, err := r.validateRegistrationData(userData, lang); err != nil {
+	if _, err := r.validateRegistrationData(ctx, userData, lang); err != nil {
 		return nil, err
 	}
 
@@ -108,7 +101,7 @@ func (r *RegistrationService) Register(userData map[string]any, lang string) (*R
 		return nil, commonEntity.NewInternalError()
 	}
 
-	accountGrpc, err := r.getAccountByEmail(email)
+	accountGrpc, err := r.getAccountByEmail(ctx, email)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +109,7 @@ func (r *RegistrationService) Register(userData map[string]any, lang string) (*R
 	var session *entity.RegistrationSession
 
 	if account := accountGrpc.GetAccount(); account != nil {
-		session, err = r.createOrUpdateSession(email, "")
+		session, err = r.createOrUpdateSession(ctx, email, "")
 		if err != nil {
 			r.logger.Error(err)
 			return nil, err
@@ -129,7 +122,7 @@ func (r *RegistrationService) Register(userData map[string]any, lang string) (*R
 			return nil, commonEntity.NewInternalError()
 		}
 
-		session, err = r.createOrUpdateSession(email, plaintextCode)
+		session, err = r.createOrUpdateSession(ctx, email, plaintextCode)
 		if err != nil {
 			r.logger.Error(fmt.Errorf("failed to create or update session: %w", err))
 			return nil, commonEntity.NewInternalError()
@@ -142,8 +135,8 @@ func (r *RegistrationService) Register(userData map[string]any, lang string) (*R
 	}, nil
 }
 
-func (r *RegistrationService) createOrUpdateSession(email string, code string) (*entity.RegistrationSession, error) {
-	session, err := r.registrationSessionRepository.FindByEmail(email)
+func (r *RegistrationService) createOrUpdateSession(ctx context.Context, email string, code string) (*entity.RegistrationSession, error) {
+	session, err := r.registrationSessionRepository.FindByEmail(ctx, email)
 
 	if err != nil {
 		r.logger.Error(err)
@@ -173,7 +166,7 @@ func (r *RegistrationService) createOrUpdateSession(email string, code string) (
 		return session, nil
 	}
 
-	if err := r.registrationSessionRepository.Save(session); err != nil {
+	if err := r.registrationSessionRepository.Save(ctx, session); err != nil {
 		r.logger.Error(err)
 		return nil, err
 	}
@@ -185,8 +178,8 @@ func (r *RegistrationService) createOrUpdateSession(email string, code string) (
 	return session, nil
 }
 
-func (r *RegistrationService) validateConfirmationCode(email string, userData map[string]any) error {
-	session, err := r.registrationSessionRepository.FindByEmail(email)
+func (r *RegistrationService) validateConfirmationCode(ctx context.Context, email string, userData map[string]any) error {
+	session, err := r.registrationSessionRepository.FindByEmail(ctx, email)
 	if err != nil {
 		r.logger.Error(err)
 		return commonEntity.NewInternalError()
@@ -206,8 +199,8 @@ func (r *RegistrationService) validateConfirmationCode(email string, userData ma
 	return nil
 }
 
-func (r *RegistrationService) ConfirmRegistration(userData map[string]any, lang string) error {
-	grpcMap, err := r.validateRegistrationData(userData, lang)
+func (r *RegistrationService) ConfirmRegistration(ctx context.Context, userData map[string]any, lang string) error {
+	grpcMap, err := r.validateRegistrationData(ctx, userData, lang)
 	if err != nil {
 		return err
 	}
@@ -218,18 +211,13 @@ func (r *RegistrationService) ConfirmRegistration(userData map[string]any, lang 
 		return commonEntity.NewInternalError()
 	}
 
-	if err := r.validateConfirmationCode(email, userData); err != nil {
+	if err := r.validateConfirmationCode(ctx, email, userData); err != nil {
 		return err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
 	md := metadata.Pairs("lang", lang)
-	ctx = metadata.NewOutgoingContext(ctx, md)
-
 	createAccountResponse, err := r.accountServiceClient.CreateAccount(
-		ctx,
+		metadata.NewOutgoingContext(ctx, md),
 		&grpcApi.CreateAccountRequest{UserData: grpcMap},
 	)
 
@@ -243,7 +231,7 @@ func (r *RegistrationService) ConfirmRegistration(userData map[string]any, lang 
 		return entity.GrpcErrorMapToError(createAccountResponse.Error)
 	}
 
-	if err := r.registrationSessionRepository.DeleteByEmail(email); err != nil {
+	if err := r.registrationSessionRepository.DeleteByEmail(ctx, email); err != nil {
 		r.logger.Error(err)
 		return commonEntity.NewInternalError()
 	}

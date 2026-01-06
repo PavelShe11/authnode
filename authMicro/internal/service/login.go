@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/PavelShe11/studbridge/auth/internal/config"
-	"github.com/PavelShe11/studbridge/auth/internal/entity"
-	"github.com/PavelShe11/studbridge/auth/internal/repository"
-	"github.com/PavelShe11/studbridge/auth/utlis/generator"
-	"github.com/PavelShe11/studbridge/auth/utlis/hash"
 	"github.com/PavelShe11/studbridge/authMicro/grpcApi"
+	"github.com/PavelShe11/studbridge/authMicro/internal/config"
+	"github.com/PavelShe11/studbridge/authMicro/internal/entity"
+	"github.com/PavelShe11/studbridge/authMicro/internal/repository"
+	"github.com/PavelShe11/studbridge/authMicro/utlis/generator"
+	"github.com/PavelShe11/studbridge/authMicro/utlis/hash"
 	commonEntity "github.com/PavelShe11/studbridge/common/entity"
 	"github.com/PavelShe11/studbridge/common/logger"
 	"github.com/PavelShe11/studbridge/common/validation"
@@ -53,18 +53,13 @@ func NewLoginService(
 	}
 }
 
-func (l *LoginService) cleanupExpiredSessions() {
-	cleanupCtx, cancelCleanup := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancelCleanup()
-	if err := l.loginSessionRepository.CleanExpired(cleanupCtx); err != nil {
+func (l *LoginService) cleanupExpiredSessions(ctx context.Context) {
+	if err := l.loginSessionRepository.CleanExpired(ctx); err != nil {
 		l.logger.Error(fmt.Errorf("error cleaning expired login sessions: %w", err))
 	}
 }
 
-func (l *LoginService) getAccountByEmail(email string) (*grpcApi.GetAccountResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+func (l *LoginService) getAccountByEmail(ctx context.Context, email string) (*grpcApi.GetAccountResponse, error) {
 	accountGrpc, err := l.accountService.GetAccountByEmail(
 		ctx,
 		&grpcApi.GetAccountByEmailRequest{Email: email},
@@ -78,8 +73,8 @@ func (l *LoginService) getAccountByEmail(email string) (*grpcApi.GetAccountRespo
 	return accountGrpc, nil
 }
 
-func (l *LoginService) verifyAccountStillValid(email string, expectedAccountId string) (bool, error) {
-	accountGrpc, err := l.getAccountByEmail(email)
+func (l *LoginService) verifyAccountStillValid(ctx context.Context, email string, expectedAccountId string) (bool, error) {
+	accountGrpc, err := l.getAccountByEmail(ctx, email)
 	if err != nil {
 		return false, err
 	}
@@ -91,8 +86,8 @@ func (l *LoginService) verifyAccountStillValid(email string, expectedAccountId s
 	return false, nil
 }
 
-func (l *LoginService) createOrUpdateSession(email string, accountId *string, code string) (*entity.LoginSession, error) {
-	session, err := l.loginSessionRepository.FindByEmail(email)
+func (l *LoginService) createOrUpdateSession(ctx context.Context, email string, accountId *string, code string) (*entity.LoginSession, error) {
+	session, err := l.loginSessionRepository.FindByEmail(ctx, email)
 	if err != nil {
 		l.logger.Error(err)
 		return nil, err
@@ -129,7 +124,7 @@ func (l *LoginService) createOrUpdateSession(email string, accountId *string, co
 		}
 	}
 
-	if err := l.loginSessionRepository.Save(session); err != nil {
+	if err := l.loginSessionRepository.Save(ctx, session); err != nil {
 		l.logger.Error(err)
 		return nil, err
 	}
@@ -141,8 +136,8 @@ func (l *LoginService) createOrUpdateSession(email string, accountId *string, co
 	return session, nil
 }
 
-func (l *LoginService) Login(email string) (*LoginAnswer, error) {
-	l.cleanupExpiredSessions()
+func (l *LoginService) Login(ctx context.Context, email string) (*LoginAnswer, error) {
+	l.cleanupExpiredSessions(ctx)
 
 	errs := commonEntity.NewValidationError()
 	l.validator.Var("email", email, "required,email", errs)
@@ -150,7 +145,7 @@ func (l *LoginService) Login(email string) (*LoginAnswer, error) {
 		return nil, errs
 	}
 
-	accountGrpc, err := l.getAccountByEmail(email)
+	accountGrpc, err := l.getAccountByEmail(ctx, email)
 	if err != nil {
 		return nil, err
 	}
@@ -169,13 +164,13 @@ func (l *LoginService) Login(email string) (*LoginAnswer, error) {
 			return nil, commonEntity.NewInternalError()
 		}
 
-		session, err = l.createOrUpdateSession(email, accountId, plaintextCode)
+		session, err = l.createOrUpdateSession(ctx, email, accountId, plaintextCode)
 		if err != nil {
 			l.logger.Error(fmt.Errorf("failed to create or update login session: %w", err))
 			return nil, commonEntity.NewInternalError()
 		}
 	} else {
-		session, err = l.createOrUpdateSession(email, nil, "")
+		session, err = l.createOrUpdateSession(ctx, email, nil, "")
 		if err != nil {
 			l.logger.Error(err)
 			return nil, err
@@ -188,8 +183,8 @@ func (l *LoginService) Login(email string) (*LoginAnswer, error) {
 	}, nil
 }
 
-func (l *LoginService) validateConfirmLoginData(email string, code string) (*string, error) {
-	session, err := l.loginSessionRepository.FindByEmail(email)
+func (l *LoginService) validateConfirmLoginData(ctx context.Context, email string, code string) (*string, error) {
+	session, err := l.loginSessionRepository.FindByEmail(ctx, email)
 	if err != nil {
 		l.logger.Error(err)
 		return nil, commonEntity.NewInternalError()
@@ -208,7 +203,7 @@ func (l *LoginService) validateConfirmLoginData(email string, code string) (*str
 	return session.AccountId, nil
 }
 
-func (l *LoginService) ConfirmLogin(email string, code string) (string, error) {
+func (l *LoginService) ConfirmLogin(ctx context.Context, email string, code string) (string, error) {
 	errs := commonEntity.NewValidationError()
 	l.validator.Var("email", email, "required,email", errs)
 	l.validator.Var("code", code, "required", errs)
@@ -216,7 +211,7 @@ func (l *LoginService) ConfirmLogin(email string, code string) (string, error) {
 		return "", errs
 	}
 
-	session, err := l.loginSessionRepository.FindByEmail(email)
+	session, err := l.loginSessionRepository.FindByEmail(ctx, email)
 	if err != nil {
 		l.logger.Error(err)
 		return "", commonEntity.NewInternalError()
@@ -237,9 +232,9 @@ func (l *LoginService) ConfirmLogin(email string, code string) (string, error) {
 		return "", entity.NewInvalidCodeError()
 	}
 
-	accountStillValid, _ := l.verifyAccountStillValid(email, *accountId)
+	accountStillValid, _ := l.verifyAccountStillValid(ctx, email, *accountId)
 
-	if err := l.loginSessionRepository.DeleteByEmail(context.Background(), email); err != nil {
+	if err := l.loginSessionRepository.DeleteByEmail(ctx, email); err != nil {
 		l.logger.Error(fmt.Errorf("failed to delete session after account switch: %w", err))
 		return "", commonEntity.NewInternalError()
 	}

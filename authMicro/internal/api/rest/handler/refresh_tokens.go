@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/PavelShe11/studbridge/auth/internal/service"
+	"github.com/PavelShe11/studbridge/authMicro/internal/service"
 	"github.com/PavelShe11/studbridge/common/logger"
 
 	"net/http"
@@ -32,7 +32,7 @@ func (h *RefreshToken) RefreshToken(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "refreshToken is required"})
 	}
 
-	tokens, err := h.tokenService.RefreshTokens(refreshToken)
+	tokens, err := h.tokenService.RefreshTokens(c.Request().Context(), refreshToken)
 	if err != nil {
 		return err
 	}

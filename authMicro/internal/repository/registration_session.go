@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/PavelShe11/studbridge/auth/internal/entity"
+	"github.com/PavelShe11/studbridge/authMicro/internal/entity"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -20,10 +20,10 @@ func NewRegistrationSessionRepository(db *sqlx.DB) *RegistrationSessionRepositor
 	}
 }
 
-func (r *RegistrationSessionRepository) FindByEmail(email string) (*entity.RegistrationSession, error) {
+func (r *RegistrationSessionRepository) FindByEmail(ctx context.Context, email string) (*entity.RegistrationSession, error) {
 	query := "SELECT * FROM registration_session WHERE email = $1"
 	result := &entity.RegistrationSession{}
-	row := r.db.QueryRowx(query, email)
+	row := r.db.QueryRowxContext(ctx, query, email)
 	err := row.StructScan(result)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
@@ -34,7 +34,7 @@ func (r *RegistrationSessionRepository) FindByEmail(email string) (*entity.Regis
 	return result, nil
 }
 
-func (r *RegistrationSessionRepository) Save(session *entity.RegistrationSession) error {
+func (r *RegistrationSessionRepository) Save(ctx context.Context, session *entity.RegistrationSession) error {
 	query := `INSERT INTO registration_session (code, email, code_expires)
 	VALUES ($1, $2, $3)
 	ON CONFLICT (email)
@@ -42,16 +42,16 @@ func (r *RegistrationSessionRepository) Save(session *entity.RegistrationSession
 	SET code = EXCLUDED.code, code_expires = EXCLUDED.code_expires
 	RETURNING id, code, email, code_expires, created_at`
 
-	err := r.db.QueryRowx(query, session.Code, session.Email, session.CodeExpires).StructScan(session)
+	err := r.db.QueryRowxContext(ctx, query, session.Code, session.Email, session.CodeExpires).StructScan(session)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *RegistrationSessionRepository) DeleteByEmail(email string) error {
+func (r *RegistrationSessionRepository) DeleteByEmail(ctx context.Context, email string) error {
 	query := "DELETE FROM registration_session WHERE email = $1"
-	_, err := r.db.Exec(query, email)
+	_, err := r.db.ExecContext(ctx, query, email)
 	if err != nil {
 		return err
 	}

@@ -42,7 +42,7 @@ func valueToString(m map[string]*structpb.Value, key string) string {
 func (a accountGrpcService) CreateAccount(ctx context.Context, request *grpcApi.CreateAccountRequest) (*grpcApi.CreateAccountResponse, error) {
 	lang := getLangFromContext(ctx)
 
-	err := a.accountService.CreateAccount(entity.Account{
+	err := a.accountService.CreateAccount(ctx, entity.Account{
 		FirstName: valueToString(request.UserData, "firstName"),
 		LastName:  valueToString(request.UserData, "lastName"),
 		Email:     valueToString(request.UserData, "email"),
@@ -57,11 +57,9 @@ func (a accountGrpcService) CreateAccount(ctx context.Context, request *grpcApi.
 	}, nil
 }
 
-func (a accountGrpcService) GetAccountByEmail(_ context.Context, request *grpcApi.GetAccountByEmailRequest) (*grpcApi.GetAccountResponse, error) {
+func (a accountGrpcService) GetAccountByEmail(ctx context.Context, request *grpcApi.GetAccountByEmailRequest) (*grpcApi.GetAccountResponse, error) {
 	return a.accountMapToGetAccountResponse(
-		a.accountService.GetAccountByEmail(
-			request.GetEmail(),
-		),
+		a.accountService.GetAccountByEmail(ctx, request.GetEmail()),
 	)
 }
 
@@ -146,10 +144,10 @@ func mapToGrpcError(e error) *grpcApi.Error {
 }
 
 func (a accountGrpcService) GetAccessTokenPayload(
-	_ context.Context,
+	ctx context.Context,
 	request *grpcApi.GetAccessTokenPayloadRequest,
 ) (*grpcApi.GetAccessTokenPayloadResponse, error) {
-	account, err := a.accountService.GetAccountById(request.GetAccountId())
+	account, err := a.accountService.GetAccountById(ctx, request.GetAccountId())
 
 	if err != nil {
 		return &grpcApi.GetAccessTokenPayloadResponse{

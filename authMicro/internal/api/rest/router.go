@@ -4,9 +4,9 @@ import (
 	"context"
 	"os"
 
-	"github.com/PavelShe11/studbridge/auth/internal/api/rest/handler"
-	"github.com/PavelShe11/studbridge/auth/internal/api/rest/httpErrorHandler"
-	mymiddleware "github.com/PavelShe11/studbridge/auth/internal/api/rest/middleware"
+	"github.com/PavelShe11/studbridge/authMicro/internal/api/rest/handler"
+	"github.com/PavelShe11/studbridge/authMicro/internal/api/rest/httpErrorHandler"
+	mymiddleware "github.com/PavelShe11/studbridge/authMicro/internal/api/rest/middleware"
 	"github.com/PavelShe11/studbridge/common/logger"
 	"github.com/PavelShe11/studbridge/common/translator"
 

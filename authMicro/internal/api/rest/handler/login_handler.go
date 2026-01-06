@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/PavelShe11/studbridge/auth/internal/service"
+	"github.com/PavelShe11/studbridge/authMicro/internal/service"
 	"github.com/PavelShe11/studbridge/common/logger"
 
 	"net/http"
@@ -34,7 +34,7 @@ func (h *Login) SendLoginCode(c echo.Context) error {
 	if !ok {
 		email = ""
 	}
-	var answer, err = h.loginService.Login(email)
+	var answer, err = h.loginService.Login(c.Request().Context(), email)
 	if err != nil {
 		return err
 	}
@@ -58,12 +58,12 @@ func (h *Login) ConfirmEmail(c echo.Context) error {
 		code = ""
 	}
 
-	accountId, err := h.loginService.ConfirmLogin(email, code)
+	accountId, err := h.loginService.ConfirmLogin(c.Request().Context(), email, code)
 	if err != nil {
 		return err
 	}
 
-	tokens, err := h.tokenService.CreateTokens(accountId)
+	tokens, err := h.tokenService.CreateTokens(c.Request().Context(), accountId)
 	if err != nil {
 		return err
 	}

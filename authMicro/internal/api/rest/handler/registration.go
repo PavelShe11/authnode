@@ -3,8 +3,8 @@ package handler
 import (
 	"net/http"
 
-	"github.com/PavelShe11/studbridge/auth/internal/api/rest/httpErrorHandler"
-	"github.com/PavelShe11/studbridge/auth/internal/service"
+	"github.com/PavelShe11/studbridge/authMicro/internal/api/rest/httpErrorHandler"
+	"github.com/PavelShe11/studbridge/authMicro/internal/service"
 	"github.com/PavelShe11/studbridge/common/logger"
 	"github.com/PavelShe11/studbridge/common/translator" // Added translator import
 
@@ -37,7 +37,7 @@ func (h *Register) SendRegistrationCode(c echo.Context) error {
 	}
 
 	lang := httpErrorHandler.GetLangFromHeader(c)
-	answer, err := h.registrationService.Register(req, lang)
+	answer, err := h.registrationService.Register(c.Request().Context(), req, lang)
 	if err != nil {
 		return err
 	}
@@ -53,7 +53,7 @@ func (h *Register) RegistrationConfirmEmail(c echo.Context) error {
 	}
 
 	lang := httpErrorHandler.GetLangFromHeader(c)
-	err := h.registrationService.ConfirmRegistration(req, lang)
+	err := h.registrationService.ConfirmRegistration(c.Request().Context(), req, lang)
 	if err != nil {
 		return err
 	}

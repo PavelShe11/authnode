@@ -5,18 +5,15 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/PavelShe11/studbridge/auth/internal/config"
-	"github.com/PavelShe11/studbridge/auth/internal/entity"
-	"github.com/PavelShe11/studbridge/auth/internal/repository"
 	"github.com/PavelShe11/studbridge/authMicro/grpcApi"
+	"github.com/PavelShe11/studbridge/authMicro/internal/config"
+	"github.com/PavelShe11/studbridge/authMicro/internal/entity"
+	"github.com/PavelShe11/studbridge/authMicro/internal/repository"
 	commonEntity "github.com/PavelShe11/studbridge/common/entity"
 	"github.com/PavelShe11/studbridge/common/logger"
+
 	"github.com/golang-jwt/jwt/v5"
 )
-
-/**
-TODO: Поработать с context
-*/
 
 type Tokens struct {
 	AccessToken         string `json:"accessToken"`
@@ -46,10 +43,10 @@ func NewTokenService(
 	}
 }
 
-func (s *TokenService) CreateTokens(accountId string) (*Tokens, error) {
-	s.cleanupExpiredSessions()
+func (s *TokenService) CreateTokens(ctx context.Context, accountId string) (*Tokens, error) {
+	s.cleanupExpiredSessions(ctx)
 	payloadResp, err := s.accountServiceClient.GetAccessTokenPayload(
-		context.Background(),
+		ctx,
 		&grpcApi.GetAccessTokenPayloadRequest{AccountId: accountId},
 	)
 	if err != nil {
@@ -67,40 +64,19 @@ func (s *TokenService) CreateTokens(accountId string) (*Tokens, error) {
 		accountId = claimsResult.GetValues()["sub"].GetStringValue()
 	}
 
-	refreshExpiry := time.Now().Add(s.jwtConfig.RefreshTokenExpiration)
+	now := time.Now()
+	refreshExpiry := now.Add(s.jwtConfig.RefreshTokenExpiration)
+	accessExpiry := now.Add(s.jwtConfig.AccessTokenExpiration)
 
-	claimsMap := jwt.MapClaims{
-		"sub": accountId,
-		"exp": refreshExpiry.Unix(),
-		"iat": time.Now().Unix(),
-		"nbf": time.Now().Unix(),
-	}
-
-	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claimsMap)
-
-	if claimsResult != nil {
-		for key, value := range claimsResult.Values {
-			claimsMap[key] = value.AsInterface()
-		}
-	}
-
-	accessExpiry := time.Now().Add(s.jwtConfig.AccessTokenExpiration)
-
-	claimsMap["exp"] = accessExpiry.Unix()
-	claimsMap["iat"] = time.Now().Unix()
-	claimsMap["nbf"] = time.Now().Unix()
-
-	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claimsMap)
-
-	refreshTokenString, err := refreshToken.SignedString([]byte(s.jwtConfig.Secret))
+	refreshTokenString, accessTokenString, err := s.generateTokenPair(
+		accountId,
+		claimsResult,
+		now,
+		refreshExpiry,
+		accessExpiry,
+	)
 	if err != nil {
-		s.logger.Error(fmt.Errorf("failed to sign refresh token: %w", err))
-		return nil, commonEntity.NewInternalError()
-	}
-
-	accessTokenString, err := accessToken.SignedString([]byte(s.jwtConfig.Secret))
-	if err != nil {
-		s.logger.Error(fmt.Errorf("failed to sign access token: %w", err))
+		s.logger.Error(err)
 		return nil, commonEntity.NewInternalError()
 	}
 
@@ -110,7 +86,7 @@ func (s *TokenService) CreateTokens(accountId string) (*Tokens, error) {
 		ExpiresAt:    refreshExpiry,
 	}
 
-	if err := s.refreshTokenSessionRepo.Save(session); err != nil {
+	if err := s.refreshTokenSessionRepo.Save(ctx, session); err != nil {
 		s.logger.Error(fmt.Errorf("failed to save refresh token session: %w", err))
 		return nil, commonEntity.NewInternalError()
 	}
@@ -123,7 +99,7 @@ func (s *TokenService) CreateTokens(accountId string) (*Tokens, error) {
 	}, nil
 }
 
-func (s *TokenService) RefreshTokens(refreshTokenString string) (*Tokens, error) {
+func (s *TokenService) RefreshTokens(ctx context.Context, refreshTokenString string) (*Tokens, error) {
 	claims := jwt.MapClaims{}
 	token, err := jwt.ParseWithClaims(
 		refreshTokenString,
@@ -147,7 +123,7 @@ func (s *TokenService) RefreshTokens(refreshTokenString string) (*Tokens, error)
 		return nil, entity.NewInvalidRefreshTokenError()
 	}
 
-	session, err := s.refreshTokenSessionRepo.FindByToken(refreshTokenString)
+	session, err := s.refreshTokenSessionRepo.FindByToken(ctx, refreshTokenString)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, commonEntity.NewInternalError()
@@ -157,21 +133,65 @@ func (s *TokenService) RefreshTokens(refreshTokenString string) (*Tokens, error)
 	}
 
 	if session.ExpiresAt.Before(time.Now()) {
-		_ = s.refreshTokenSessionRepo.DeleteByToken(refreshTokenString)
+		_ = s.refreshTokenSessionRepo.DeleteByToken(ctx, refreshTokenString)
 		return nil, entity.NewRefreshTokenExpiredError()
 	}
 
-	if err := s.refreshTokenSessionRepo.DeleteByToken(refreshTokenString); err != nil {
+	if err := s.refreshTokenSessionRepo.DeleteByToken(ctx, refreshTokenString); err != nil {
 		s.logger.Error(err)
 	}
 
-	return s.CreateTokens(sub)
+	return s.CreateTokens(ctx, sub)
 }
 
-func (s *TokenService) cleanupExpiredSessions() {
-	cleanupCtx, cancelCleanup := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancelCleanup()
-	if err := s.refreshTokenSessionRepo.CleanExpired(cleanupCtx); err != nil {
+func (s *TokenService) generateTokenPair(
+	accountId string,
+	claimsResult *grpcApi.AccessTokenClaims,
+	now time.Time,
+	refreshExpiry time.Time,
+	accessExpiry time.Time,
+) (refreshToken string, accessToken string, err error) {
+	baseClaims := jwt.MapClaims{
+		"sub": accountId,
+		"iat": now.Unix(),
+		"nbf": now.Unix(),
+	}
+
+	if claimsResult != nil {
+		for key, value := range claimsResult.Values {
+			baseClaims[key] = value.AsInterface()
+		}
+	}
+
+	refreshClaims := jwt.MapClaims{
+		"sub": accountId,
+		"iat": now.Unix(),
+		"nbf": now.Unix(),
+		"exp": refreshExpiry.Unix(),
+	}
+	refreshJWT := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
+	refreshToken, err = refreshJWT.SignedString([]byte(s.jwtConfig.Secret))
+	if err != nil {
+		return "", "", fmt.Errorf("failed to sign refresh token: %w", err)
+	}
+
+	accessClaims := make(jwt.MapClaims, len(baseClaims)+1)
+	for key, value := range baseClaims {
+		accessClaims[key] = value
+	}
+	accessClaims["exp"] = accessExpiry.Unix()
+
+	accessJWT := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
+	accessToken, err = accessJWT.SignedString([]byte(s.jwtConfig.Secret))
+	if err != nil {
+		return "", "", fmt.Errorf("failed to sign access token: %w", err)
+	}
+
+	return refreshToken, accessToken, nil
+}
+
+func (s *TokenService) cleanupExpiredSessions(ctx context.Context) {
+	if err := s.refreshTokenSessionRepo.CleanExpired(ctx); err != nil {
 		s.logger.Error(fmt.Errorf("error cleaning expired refresh token sessions: %w", err))
 	}
 }
