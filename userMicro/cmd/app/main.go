@@ -11,8 +11,9 @@ import (
 	"github.com/PavelShe11/studbridge/user/internal/api/grpc"
 	"github.com/PavelShe11/studbridge/user/internal/api/grpc/accountGrpcService"
 	"github.com/PavelShe11/studbridge/user/internal/config"
-	"github.com/PavelShe11/studbridge/user/internal/repository"
-	"github.com/PavelShe11/studbridge/user/internal/repository/database"
+	"github.com/PavelShe11/studbridge/user/internal/infrastructure/adapter/repository"
+	"github.com/PavelShe11/studbridge/user/internal/infrastructure/adapter/repository/database"
+	"github.com/PavelShe11/studbridge/user/internal/port"
 	"github.com/PavelShe11/studbridge/user/internal/service"
 	"github.com/jmoiron/sqlx"
 )
@@ -26,7 +27,7 @@ type commonModule struct {
 
 type repositoriesModule struct {
 	db                *sqlx.DB
-	accountRepository *repository.AccountRepository
+	accountRepository port.AccountRepository
 }
 
 func (r *repositoriesModule) Close(l logger.Logger) {

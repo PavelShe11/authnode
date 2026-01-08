@@ -7,17 +7,17 @@ import (
 	"github.com/PavelShe11/studbridge/common/logger"
 	"github.com/PavelShe11/studbridge/common/validation"
 	"github.com/PavelShe11/studbridge/user/internal/entity"
-	"github.com/PavelShe11/studbridge/user/internal/repository"
+	"github.com/PavelShe11/studbridge/user/internal/port"
 )
 
 type AccountService struct {
-	accountRepository *repository.AccountRepository
+	accountRepository port.AccountRepository
 	logger            logger.Logger
 	validator         *validation.Validator
 }
 
 func NewAccountService(
-	accountRepository *repository.AccountRepository,
+	accountRepository port.AccountRepository,
 	l logger.Logger,
 	validator *validation.Validator,
 ) *AccountService {

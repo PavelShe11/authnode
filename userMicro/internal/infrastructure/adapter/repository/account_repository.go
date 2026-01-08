@@ -6,21 +6,24 @@ import (
 	"errors"
 
 	"github.com/PavelShe11/studbridge/user/internal/entity"
+	"github.com/PavelShe11/studbridge/user/internal/port"
 
 	"github.com/jmoiron/sqlx"
 )
 
-type AccountRepository struct {
+type accountRepository struct {
 	db *sqlx.DB
 }
 
-func NewAccountRepository(db *sqlx.DB) *AccountRepository {
-	return &AccountRepository{
+func NewAccountRepository(db *sqlx.DB) port.AccountRepository {
+	return &accountRepository{
 		db: db,
 	}
 }
 
-func (a *AccountRepository) CreateAccount(ctx context.Context, account entity.Account) error {
+var _ port.AccountRepository = (*accountRepository)(nil)
+
+func (a *accountRepository) CreateAccount(ctx context.Context, account entity.Account) error {
 	query := "INSERT INTO account (first_name, last_name, email) VALUES (:first_name, :last_name, :email)"
 	_, err := a.db.NamedExecContext(ctx, query, account)
 	if err != nil {
@@ -29,7 +32,7 @@ func (a *AccountRepository) CreateAccount(ctx context.Context, account entity.Ac
 	return nil
 }
 
-func (a *AccountRepository) GetAccountByEmail(ctx context.Context, email string) (*entity.Account, error) {
+func (a *accountRepository) GetAccountByEmail(ctx context.Context, email string) (*entity.Account, error) {
 	account := entity.Account{}
 	query := "SELECT * FROM account WHERE email=$1"
 	row := a.db.QueryRowxContext(ctx, query, email)
@@ -43,7 +46,7 @@ func (a *AccountRepository) GetAccountByEmail(ctx context.Context, email string)
 	return &account, nil
 }
 
-func (a *AccountRepository) GetAccountById(ctx context.Context, id string) (*entity.Account, error) {
+func (a *accountRepository) GetAccountById(ctx context.Context, id string) (*entity.Account, error) {
 	account := entity.Account{}
 	query := "SELECT * FROM account WHERE id=$1"
 	row := a.db.QueryRowxContext(ctx, query, id)
