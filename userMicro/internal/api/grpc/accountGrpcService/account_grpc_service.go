@@ -73,11 +73,7 @@ func (a accountGrpcService) accountMapToGetAccountResponse(account *entity.Accou
 	}
 
 	if account == nil {
-		return &grpcApi.GetAccountResponse{
-			Result: &grpcApi.GetAccountResponse_Error{
-				Error: &grpcApi.Error{Code: grpcApi.ErrorCode_INTERNAL},
-			},
-		}, nil
+		return nil, nil
 	}
 
 	return &grpcApi.GetAccountResponse{

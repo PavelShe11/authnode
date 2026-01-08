@@ -15,6 +15,8 @@ import (
 	"github.com/PavelShe11/studbridge/authMicro/internal/api/rest"
 	"github.com/PavelShe11/studbridge/authMicro/internal/api/rest/handler"
 	"github.com/PavelShe11/studbridge/authMicro/internal/config"
+	grpcAdapter "github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/adapter/grpc"
+	"github.com/PavelShe11/studbridge/authMicro/internal/port"
 	"github.com/PavelShe11/studbridge/authMicro/internal/repository"
 	"github.com/PavelShe11/studbridge/authMicro/internal/repository/database"
 	"github.com/PavelShe11/studbridge/authMicro/internal/service"
@@ -28,10 +30,6 @@ import (
 	"google.golang.org/grpc/credentials/alts"
 	"google.golang.org/grpc/credentials/insecure"
 )
-
-/**
-TODO: индексы
-*/
 
 type commonModule struct {
 	logger     logger.Logger
@@ -145,6 +143,24 @@ func (r *repositoriesModule) Close(l logger.Logger) {
 	}
 }
 
+type infrastructureModule struct {
+	accountProvider port.AccountProvider
+}
+
+func newInfrastructureModule(
+	commonModule *commonModule,
+	grpcServiceClientModule *grpcServiceClientsModule,
+) *infrastructureModule {
+	accountProvider := grpcAdapter.NewAccountGrpcAdapter(
+		grpcServiceClientModule.accountServiceClient,
+		commonModule.logger,
+	)
+
+	return &infrastructureModule{
+		accountProvider: accountProvider,
+	}
+}
+
 type servicesModule struct {
 	registrationService *service.RegistrationService
 	loginService        *service.LoginService
@@ -154,30 +170,30 @@ type servicesModule struct {
 func newServicesModule(
 	commonModule *commonModule,
 	repositoriesModule *repositoriesModule,
-	grpcServiceClientModule *grpcServiceClientsModule,
+	infrastructureModule *infrastructureModule,
 ) *servicesModule {
 	l := commonModule.logger
 	conf := commonModule.config
 	validator := commonModule.validator
-	grpcAccountServiceClient := grpcServiceClientModule.accountServiceClient
+	accountProvider := infrastructureModule.accountProvider
 
 	return &servicesModule{
 		registrationService: service.NewRegistrationService(
 			repositoriesModule.registrationSessionRepository,
-			grpcAccountServiceClient,
+			accountProvider,
 			l,
 			conf.CodeGenConfig,
 		),
 		loginService: service.NewLoginService(
 			repositoriesModule.loginSessionRepository,
-			grpcAccountServiceClient,
+			accountProvider,
 			l,
 			conf.CodeGenConfig,
 			validator,
 		),
 		tokenService: service.NewTokenService(
 			repositoriesModule.refreshTokenSessionRepository,
-			grpcAccountServiceClient,
+			accountProvider,
 			commonModule.logger,
 			conf.JWT,
 		),
@@ -196,7 +212,8 @@ func newApp() *app {
 	common := newCommonModule()
 	grpcClient := newGrpcServiceClientModule(common)
 	repositories := newRepositoriesModule(common)
-	services := newServicesModule(common, repositories, grpcClient)
+	infrastructure := newInfrastructureModule(common, grpcClient)
+	services := newServicesModule(common, repositories, infrastructure)
 
 	authenticateUserUsecase := usecase.NewAuthenticateUser(
 		services.loginService,

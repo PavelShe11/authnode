@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/PavelShe11/studbridge/authMicro/grpcApi"
 	"github.com/PavelShe11/studbridge/authMicro/internal/config"
 	"github.com/PavelShe11/studbridge/authMicro/internal/entity"
+	"github.com/PavelShe11/studbridge/authMicro/internal/port"
 	"github.com/PavelShe11/studbridge/authMicro/internal/repository"
 	commonEntity "github.com/PavelShe11/studbridge/common/entity"
 	"github.com/PavelShe11/studbridge/common/logger"
@@ -15,53 +15,40 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type Tokens struct {
-	AccessToken         string `json:"accessToken"`
-	AccessTokenExpires  int64  `json:"accessTokenExpires"`
-	RefreshToken        string `json:"refreshToken"`
-	RefreshTokenExpires int64  `json:"refreshTokenExpires"`
-}
-
 type TokenService struct {
 	refreshTokenSessionRepo *repository.RefreshTokenSessionRepository
-	accountServiceClient    grpcApi.AccountServiceClient
+	accountProvider         port.AccountProvider
 	jwtConfig               config.JWTConfig
 	logger                  logger.Logger
 }
 
 func NewTokenService(
 	refreshTokenSessionRepo *repository.RefreshTokenSessionRepository,
-	accountServiceClient grpcApi.AccountServiceClient,
+	accountProvider port.AccountProvider,
 	logger logger.Logger,
 	jwtConfig config.JWTConfig,
 ) *TokenService {
 	return &TokenService{
 		jwtConfig:               jwtConfig,
 		refreshTokenSessionRepo: refreshTokenSessionRepo,
-		accountServiceClient:    accountServiceClient,
+		accountProvider:         accountProvider,
 		logger:                  logger,
 	}
 }
 
-func (s *TokenService) CreateTokens(ctx context.Context, accountId string) (*Tokens, error) {
+func (s *TokenService) CreateTokens(ctx context.Context, accountId string) (*entity.Tokens, error) {
 	s.cleanupExpiredSessions(ctx)
-	payloadResp, err := s.accountServiceClient.GetAccessTokenPayload(
-		ctx,
-		&grpcApi.GetAccessTokenPayloadRequest{AccountId: accountId},
-	)
+
+	claimsResult, err := s.accountProvider.GetAccessTokenPayload(ctx, accountId)
 	if err != nil {
 		s.logger.Error(fmt.Errorf("failed to get token payload: %w", err))
-		return nil, commonEntity.NewInternalError()
+		return nil, err
 	}
 
-	if grpcError := payloadResp.GetError(); grpcError != nil {
-		s.logger.Error("user service returned error for token payload")
-		return nil, entity.GrpcErrorMapToError(grpcError)
-	}
-
-	claimsResult := payloadResp.GetClaims()
-	if claimsResult != nil && claimsResult.GetValues()["sub"] != nil {
-		accountId = claimsResult.GetValues()["sub"].GetStringValue()
+	if claimsResult != nil {
+		if sub, ok := claimsResult["sub"].(string); ok && sub != "" {
+			accountId = sub
+		}
 	}
 
 	now := time.Now()
@@ -91,7 +78,7 @@ func (s *TokenService) CreateTokens(ctx context.Context, accountId string) (*Tok
 		return nil, commonEntity.NewInternalError()
 	}
 
-	return &Tokens{
+	return &entity.Tokens{
 		AccessToken:         accessTokenString,
 		AccessTokenExpires:  accessExpiry.Unix(),
 		RefreshToken:        refreshTokenString,
@@ -99,7 +86,7 @@ func (s *TokenService) CreateTokens(ctx context.Context, accountId string) (*Tok
 	}, nil
 }
 
-func (s *TokenService) RefreshTokens(ctx context.Context, refreshTokenString string) (*Tokens, error) {
+func (s *TokenService) RefreshTokens(ctx context.Context, refreshTokenString string) (*entity.Tokens, error) {
 	claims := jwt.MapClaims{}
 	token, err := jwt.ParseWithClaims(
 		refreshTokenString,
@@ -146,7 +133,7 @@ func (s *TokenService) RefreshTokens(ctx context.Context, refreshTokenString str
 
 func (s *TokenService) generateTokenPair(
 	accountId string,
-	claimsResult *grpcApi.AccessTokenClaims,
+	claimsResult map[string]interface{},
 	now time.Time,
 	refreshExpiry time.Time,
 	accessExpiry time.Time,
@@ -158,8 +145,8 @@ func (s *TokenService) generateTokenPair(
 	}
 
 	if claimsResult != nil {
-		for key, value := range claimsResult.Values {
-			baseClaims[key] = value.AsInterface()
+		for key, value := range claimsResult {
+			baseClaims[key] = value
 		}
 	}
 

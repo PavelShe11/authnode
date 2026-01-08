@@ -6,19 +6,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/PavelShe11/studbridge/authMicro/grpcApi"
 	"github.com/PavelShe11/studbridge/authMicro/internal/config"
 	"github.com/PavelShe11/studbridge/authMicro/internal/entity"
+	"github.com/PavelShe11/studbridge/authMicro/internal/port"
 	"github.com/PavelShe11/studbridge/authMicro/internal/repository"
-	"github.com/PavelShe11/studbridge/authMicro/utlis/converter"
 	"github.com/PavelShe11/studbridge/authMicro/utlis/generator"
 	"github.com/PavelShe11/studbridge/authMicro/utlis/hash"
 	commonEntity "github.com/PavelShe11/studbridge/common/entity"
 	"github.com/PavelShe11/studbridge/common/logger"
-
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/structpb"
 )
 
 type RegisterAnswer struct {
@@ -28,15 +23,20 @@ type RegisterAnswer struct {
 
 type RegistrationService struct {
 	registrationSessionRepository *repository.RegistrationSessionRepository
-	accountServiceClient          grpcApi.AccountServiceClient
+	accountProvider               port.AccountProvider
 	logger                        logger.Logger
 	CodeGenConfig                 config.CodeGenConfig
 }
 
-func NewRegistrationService(registrationSessionRepository *repository.RegistrationSessionRepository, accountServiceClient grpcApi.AccountServiceClient, logger logger.Logger, codeGenConfig config.CodeGenConfig) *RegistrationService {
+func NewRegistrationService(
+	registrationSessionRepository *repository.RegistrationSessionRepository,
+	accountProvider port.AccountProvider,
+	logger logger.Logger,
+	codeGenConfig config.CodeGenConfig,
+) *RegistrationService {
 	return &RegistrationService{
 		registrationSessionRepository: registrationSessionRepository,
-		accountServiceClient:          accountServiceClient,
+		accountProvider:               accountProvider,
 		logger:                        logger,
 		CodeGenConfig:                 codeGenConfig,
 	}
@@ -45,7 +45,7 @@ func NewRegistrationService(registrationSessionRepository *repository.Registrati
 func (r *RegistrationService) Register(ctx context.Context, userData map[string]any, lang string) (*RegisterAnswer, error) {
 	r.cleanupExpiredSessions(ctx)
 
-	if _, err := r.validateRegistrationData(ctx, userData, lang); err != nil {
+	if err := r.accountProvider.ValidateAccountData(ctx, userData, lang); err != nil {
 		return nil, err
 	}
 
@@ -55,14 +55,14 @@ func (r *RegistrationService) Register(ctx context.Context, userData map[string]
 		return nil, commonEntity.NewInternalError()
 	}
 
-	accountGrpc, err := r.getAccountByEmail(ctx, email)
+	account, err := r.accountProvider.GetAccountByEmail(ctx, email)
 	if err != nil {
 		return nil, err
 	}
 
 	var session *entity.RegistrationSession
 
-	if account := accountGrpc.GetAccount(); account != nil {
+	if account != nil {
 		session, err = r.createOrUpdateSession(ctx, email, "")
 	} else {
 		var plaintextCode string
@@ -86,8 +86,7 @@ func (r *RegistrationService) Register(ctx context.Context, userData map[string]
 }
 
 func (r *RegistrationService) ConfirmRegistration(ctx context.Context, userData map[string]any, lang string) error {
-	grpcMap, err := r.validateRegistrationData(ctx, userData, lang)
-	if err != nil {
+	if err := r.accountProvider.ValidateAccountData(ctx, userData, lang); err != nil {
 		return err
 	}
 
@@ -101,20 +100,8 @@ func (r *RegistrationService) ConfirmRegistration(ctx context.Context, userData 
 		return err
 	}
 
-	md := metadata.Pairs("lang", lang)
-	createAccountResponse, err := r.accountServiceClient.CreateAccount(
-		metadata.NewOutgoingContext(ctx, md),
-		&grpcApi.CreateAccountRequest{UserData: grpcMap},
-	)
-
-	if err != nil {
-		st, _ := status.FromError(err)
-		r.logger.Error(fmt.Errorf("CreateAccount error: %v, grpc status: %v", err, st))
-		return commonEntity.NewInternalError()
-	}
-
-	if createAccountResponse.Error != nil {
-		return entity.GrpcErrorMapToError(createAccountResponse.Error)
+	if err := r.accountProvider.CreateAccount(ctx, userData, lang); err != nil {
+		return err
 	}
 
 	if err := r.registrationSessionRepository.DeleteByEmail(ctx, email); err != nil {
@@ -130,32 +117,6 @@ func (r *RegistrationService) cleanupExpiredSessions(ctx context.Context) {
 	if err := r.registrationSessionRepository.CleanExpired(ctx); err != nil {
 		r.logger.Error(fmt.Errorf("error cleaning expired registration sessions: %w", err))
 	}
-}
-
-func (r *RegistrationService) validateRegistrationData(ctx context.Context, userData map[string]any, lang string) (map[string]*structpb.Value, error) {
-	grpcMap, err := converter.ConvertToGrpcMap(userData)
-	if err != nil {
-		r.logger.Error(err)
-		return nil, err
-	}
-
-	md := metadata.Pairs("lang", lang)
-	ctx = metadata.NewOutgoingContext(ctx, md)
-
-	validationResponse, err := r.accountServiceClient.ValidateAccountData(
-		ctx,
-		&grpcApi.ValidateAccountRequest{UserData: grpcMap},
-	)
-	if err != nil {
-		st, _ := status.FromError(err)
-		r.logger.Error(fmt.Errorf("ValidateAccountData error: %v, grpc status: %v", err, st))
-		return nil, commonEntity.NewInternalError()
-	}
-	if validationResponse.Error != nil {
-		return nil, entity.GrpcErrorMapToError(validationResponse.Error)
-	}
-
-	return grpcMap, nil
 }
 
 func (r *RegistrationService) validateConfirmationCode(ctx context.Context, email string, userData map[string]any) error {
@@ -220,18 +181,4 @@ func (r *RegistrationService) createOrUpdateSession(ctx context.Context, email s
 	r.logger.Debug(debugSession)
 
 	return session, nil
-}
-
-func (r *RegistrationService) getAccountByEmail(ctx context.Context, email string) (*grpcApi.GetAccountResponse, error) {
-	accountGrpc, err := r.accountServiceClient.GetAccountByEmail(
-		ctx,
-		&grpcApi.GetAccountByEmailRequest{Email: email},
-	)
-
-	if err != nil {
-		st, _ := status.FromError(err)
-		r.logger.Error(fmt.Errorf("GetAccountByEmail error: %v, grpc status: %v", err, st))
-		return nil, commonEntity.NewInternalError()
-	}
-	return accountGrpc, nil
 }

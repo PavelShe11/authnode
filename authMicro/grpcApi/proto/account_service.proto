@@ -61,7 +61,7 @@ message GetAccessTokenPayloadRequest {
 message GetAccessTokenPayloadResponse {
   oneof result {
     AccessTokenClaims claims = 1;
-      Error error = 2;
+    Error error = 2;
   }
 }
 

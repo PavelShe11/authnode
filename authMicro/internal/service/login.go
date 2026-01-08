@@ -5,16 +5,15 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/PavelShe11/studbridge/authMicro/grpcApi"
 	"github.com/PavelShe11/studbridge/authMicro/internal/config"
 	"github.com/PavelShe11/studbridge/authMicro/internal/entity"
+	"github.com/PavelShe11/studbridge/authMicro/internal/port"
 	"github.com/PavelShe11/studbridge/authMicro/internal/repository"
 	"github.com/PavelShe11/studbridge/authMicro/utlis/generator"
 	"github.com/PavelShe11/studbridge/authMicro/utlis/hash"
 	commonEntity "github.com/PavelShe11/studbridge/common/entity"
 	"github.com/PavelShe11/studbridge/common/logger"
 	"github.com/PavelShe11/studbridge/common/validation"
-	"google.golang.org/grpc/status"
 )
 
 type LoginAnswer struct {
@@ -31,7 +30,7 @@ type ConfirmLoginEmailAnswer struct {
 
 type LoginService struct {
 	loginSessionRepository *repository.LoginSessionRepository
-	accountService         grpcApi.AccountServiceClient
+	accountProvider        port.AccountProvider
 	logger                 logger.Logger
 	CodeGenConfig          config.CodeGenConfig
 	validator              *validation.Validator
@@ -39,14 +38,14 @@ type LoginService struct {
 
 func NewLoginService(
 	loginSessionRepository *repository.LoginSessionRepository,
-	accountService grpcApi.AccountServiceClient,
+	accountProvider port.AccountProvider,
 	logger logger.Logger,
 	codeGenConfig config.CodeGenConfig,
 	validator *validation.Validator,
 ) *LoginService {
 	return &LoginService{
 		loginSessionRepository: loginSessionRepository,
-		accountService:         accountService,
+		accountProvider:        accountProvider,
 		logger:                 logger,
 		CodeGenConfig:          codeGenConfig,
 		validator:              validator,
@@ -59,27 +58,13 @@ func (l *LoginService) cleanupExpiredSessions(ctx context.Context) {
 	}
 }
 
-func (l *LoginService) getAccountByEmail(ctx context.Context, email string) (*grpcApi.GetAccountResponse, error) {
-	accountGrpc, err := l.accountService.GetAccountByEmail(
-		ctx,
-		&grpcApi.GetAccountByEmailRequest{Email: email},
-	)
-
-	if err != nil {
-		st, _ := status.FromError(err)
-		l.logger.Error(fmt.Errorf("GetAccountByEmail error: %v, grpc status: %v", err, st))
-		return nil, commonEntity.NewInternalError()
-	}
-	return accountGrpc, nil
-}
-
 func (l *LoginService) verifyAccountStillValid(ctx context.Context, email string, expectedAccountId string) (bool, error) {
-	accountGrpc, err := l.getAccountByEmail(ctx, email)
+	account, err := l.accountProvider.GetAccountByEmail(ctx, email)
 	if err != nil {
 		return false, err
 	}
 
-	if account := accountGrpc.GetAccount(); account != nil && account.AccountId != "" {
+	if account != nil && account.AccountId != "" {
 		return account.AccountId == expectedAccountId, nil
 	}
 
@@ -145,13 +130,13 @@ func (l *LoginService) Login(ctx context.Context, email string) (*LoginAnswer, e
 		return nil, errs
 	}
 
-	accountGrpc, err := l.getAccountByEmail(ctx, email)
+	account, err := l.accountProvider.GetAccountByEmail(ctx, email)
 	if err != nil {
 		return nil, err
 	}
 
 	var accountId *string
-	if account := accountGrpc.GetAccount(); account != nil && account.AccountId != "" {
+	if account != nil && account.AccountId != "" {
 		accountId = &account.AccountId
 	}
 
