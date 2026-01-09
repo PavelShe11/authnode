@@ -112,13 +112,17 @@ func (s *TokenService) RefreshTokens(ctx context.Context, refreshTokenString str
 		return nil, entity.NewRefreshTokenExpiredError()
 	}
 
-	defer func() {
-		if err := s.refreshTokenSessionRepo.DeleteByToken(ctx, refreshTokenString); err != nil {
-			s.logger.Error(err)
-		}
-	}()
+	var result *entity.Tokens
+	result, err = s.CreateTokens(ctx, accountId)
+	if err != nil {
+		return nil, err
+	}
 
-	return s.CreateTokens(ctx, accountId)
+	if err := s.refreshTokenSessionRepo.DeleteByToken(ctx, refreshTokenString); err != nil {
+		s.logger.Error(err)
+	}
+
+	return result, nil
 }
 
 func (s *TokenService) generateTokenPair(
