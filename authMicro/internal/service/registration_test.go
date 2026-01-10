@@ -85,3 +85,34 @@ func TestRegister_NewUser_Success(t *testing.T) {
 	mockProvider.AssertExpectations(t)
 	mockRepo.AssertExpectations(t)
 }
+
+// TestRegister_ExistingUser_EmptyCode - existing email, no code (anti-enumeration)
+func TestRegister_ExistingUser_EmptyCode(t *testing.T) {
+	t.Parallel()
+
+	service, mockRepo, mockProvider := setupService(t)
+
+	userData := map[string]any{
+		"email": "existing@test.com",
+	}
+
+	existingAccount := &entity.Account{
+		Email: "existing@test.com",
+	}
+
+	mockProvider.On("ValidateAccountData", mock.Anything, userData, "en").Return(nil)
+	mockProvider.On("GetAccountByEmail", mock.Anything, "existing@test.com").Return(existingAccount, nil)
+	mockRepo.On("FindByEmail", mock.Anything, "existing@test.com").Return(nil, nil)
+	mockRepo.On("Save", mock.Anything, mock.MatchedBy(func(s *entity.RegistrationSession) bool {
+		return s.Email == "existing@test.com" && s.Code == ""
+	})).Return(nil)
+	mockRepo.On("CleanExpired", mock.Anything).Return(nil)
+
+	result, err := service.Register(context.Background(), userData, "en")
+
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+
+	mockProvider.AssertExpectations(t)
+	mockRepo.AssertExpectations(t)
+}
