@@ -3,8 +3,8 @@ package handler
 import (
 	"net/http"
 
-	"github.com/PavelShe11/studbridge/authMicro/internal/api/rest/httpErrorHandler"
-	"github.com/PavelShe11/studbridge/authMicro/internal/api/rest/models"
+	"github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/inbound/rest/httpErrorHandler"
+	"github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/inbound/rest/models"
 	"github.com/PavelShe11/studbridge/authMicro/internal/service"
 	"github.com/PavelShe11/studbridge/common/logger"
 	"github.com/PavelShe11/studbridge/common/translator" // Added translator import

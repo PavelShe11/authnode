@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/PavelShe11/studbridge/authMicro/internal/api/rest/models"
+	models2 "github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/inbound/rest/models"
 	"github.com/PavelShe11/studbridge/authMicro/internal/service"
 	"github.com/PavelShe11/studbridge/authMicro/internal/usecase"
 	"github.com/PavelShe11/studbridge/common/logger"
@@ -45,7 +45,7 @@ func (h *Login) SendLoginCode(c echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, models.NewLoginResponse(answer))
+	return c.JSON(http.StatusOK, models2.NewLoginResponse(answer))
 }
 
 func (h *Login) ConfirmEmail(c echo.Context) error {
@@ -68,5 +68,5 @@ func (h *Login) ConfirmEmail(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, models.NewTokensResponse(tokens))
+	return c.JSON(http.StatusOK, models2.NewTokensResponse(tokens))
 }

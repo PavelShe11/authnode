@@ -4,9 +4,9 @@ import (
 	"context"
 	"os"
 
-	"github.com/PavelShe11/studbridge/authMicro/internal/api/rest/handler"
-	"github.com/PavelShe11/studbridge/authMicro/internal/api/rest/httpErrorHandler"
-	mymiddleware "github.com/PavelShe11/studbridge/authMicro/internal/api/rest/middleware"
+	handler2 "github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/inbound/rest/handler"
+	httpErrorHandler2 "github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/inbound/rest/httpErrorHandler"
+	mymiddleware "github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/inbound/rest/middleware"
 	"github.com/PavelShe11/studbridge/common/logger"
 	"github.com/PavelShe11/studbridge/common/translator"
 
@@ -22,13 +22,13 @@ type Router struct {
 func NewRouter(
 	log logger.Logger,
 	translator *translator.Translator,
-	regHandler *handler.Register,
-	loginHandler *handler.Login,
-	refreshTokenHandler *handler.RefreshToken,
+	regHandler *handler2.Register,
+	loginHandler *handler2.Login,
+	refreshTokenHandler *handler2.RefreshToken,
 ) *Router {
 	e := echo.New()
-	e.HTTPErrorHandler = httpErrorHandler.NewHttpErrorHandler(
-		httpErrorHandler.NewBaseErrorHandler(translator, log),
+	e.HTTPErrorHandler = httpErrorHandler2.NewHttpErrorHandler(
+		httpErrorHandler2.NewBaseErrorHandler(translator, log),
 	)
 
 	e.Use(mymiddleware.RequestLogger(log))

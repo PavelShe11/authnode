@@ -3,7 +3,7 @@ package handler
 import (
 	"errors"
 
-	"github.com/PavelShe11/studbridge/authMicro/internal/api/rest/models"
+	"github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/inbound/rest/models"
 	"github.com/PavelShe11/studbridge/authMicro/internal/service"
 	"github.com/PavelShe11/studbridge/common/logger"
 

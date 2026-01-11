@@ -7,17 +7,17 @@ import (
 	"syscall"
 	"time"
 
-	repository2 "github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/adapter/repository"
-	"github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/adapter/repository/database"
+	"github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/inbound/rest"
+	handler2 "github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/inbound/rest/handler"
+	grpcAdapter "github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/outbound/grpc"
+	"github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/outbound/repository"
+	"github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/outbound/repository/database"
 	"github.com/PavelShe11/studbridge/authMicro/internal/usecase"
 	trmsql "github.com/avito-tech/go-transaction-manager/drivers/sqlx/v2"
 	trmcontext "github.com/avito-tech/go-transaction-manager/trm/v2/context"
 
 	"github.com/PavelShe11/studbridge/authMicro/grpcApi"
-	"github.com/PavelShe11/studbridge/authMicro/internal/api/rest"
-	"github.com/PavelShe11/studbridge/authMicro/internal/api/rest/handler"
 	"github.com/PavelShe11/studbridge/authMicro/internal/config"
-	grpcAdapter "github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/adapter/grpc"
 	"github.com/PavelShe11/studbridge/authMicro/internal/port"
 	"github.com/PavelShe11/studbridge/authMicro/internal/service"
 	"github.com/PavelShe11/studbridge/authMicro/utlis/interceptor"
@@ -153,9 +153,9 @@ func newRepositoriesModule(commonModule *commonModule) *repositoriesModule {
 
 	return &repositoriesModule{
 		db:                            db,
-		registrationSessionRepository: repository2.NewRegistrationSessionRepository(db, trmsql.DefaultCtxGetter),
-		loginSessionRepository:        repository2.NewLoginSessionRepository(db, trmsql.DefaultCtxGetter),
-		refreshTokenSessionRepository: repository2.NewRefreshTokenSessionRepository(db, trmsql.DefaultCtxGetter),
+		registrationSessionRepository: repository.NewRegistrationSessionRepository(db, trmsql.DefaultCtxGetter),
+		loginSessionRepository:        repository.NewLoginSessionRepository(db, trmsql.DefaultCtxGetter),
+		refreshTokenSessionRepository: repository.NewRefreshTokenSessionRepository(db, trmsql.DefaultCtxGetter),
 		trManager:                     trManager,
 	}
 }
@@ -236,9 +236,9 @@ func newApp() *app {
 	router := rest.NewRouter(
 		common.logger,
 		common.translator,
-		handler.NewRegisterHandler(common.logger, services.registrationService, common.translator),
-		handler.NewLoginHandler(common.logger, services.loginService, authenticateUserUsecase),
-		handler.NewRefreshTokenHandler(common.logger, services.tokenService),
+		handler2.NewRegisterHandler(common.logger, services.registrationService, common.translator),
+		handler2.NewLoginHandler(common.logger, services.loginService, authenticateUserUsecase),
+		handler2.NewRefreshTokenHandler(common.logger, services.tokenService),
 	)
 
 	return &app{
