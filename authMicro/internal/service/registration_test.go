@@ -9,6 +9,7 @@ import (
 	"github.com/PavelShe11/studbridge/authMicro/internal/entity"
 	"github.com/PavelShe11/studbridge/authMicro/test/fixtures"
 	"github.com/PavelShe11/studbridge/authMicro/test/mocks"
+	commonEntity "github.com/PavelShe11/studbridge/common/entity"
 	"github.com/PavelShe11/studbridge/common/logger"
 
 	"github.com/stretchr/testify/assert"
@@ -112,6 +113,31 @@ func TestRegister_ExistingUser_EmptyCode(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
+
+	mockProvider.AssertExpectations(t)
+	mockRepo.AssertExpectations(t)
+}
+
+// TestRegister_ValidationError_ReturnsError - ValidateAccountData fails
+func TestRegister_ValidationError_ReturnsError(t *testing.T) {
+	t.Parallel()
+
+	service, mockRepo, mockProvider := setupService(t)
+
+	userData := map[string]any{
+		"email": "invalid-email",
+	}
+
+	validationErr := commonEntity.NewValidationError()
+
+	mockProvider.On("ValidateAccountData", mock.Anything, userData, "en").Return(validationErr)
+	mockRepo.On("CleanExpired", mock.Anything).Return(nil)
+
+	result, err := service.Register(context.Background(), userData, "en")
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Equal(t, validationErr, err)
 
 	mockProvider.AssertExpectations(t)
 	mockRepo.AssertExpectations(t)
