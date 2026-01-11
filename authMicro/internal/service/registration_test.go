@@ -177,3 +177,81 @@ func TestConfirmRegistration_Success(t *testing.T) {
 	mockProvider.AssertExpectations(t)
 	mockRepo.AssertExpectations(t)
 }
+
+// TestConfirmRegistration_ValidationErrors - table-driven test for error scenarios
+func TestConfirmRegistration_ValidationErrors(t *testing.T) {
+	t.Parallel()
+
+	plainCode := "123456"
+	hashedCode, _ := hash.HashCode(plainCode)
+
+	tests := []struct {
+		name            string
+		codeInRequest   string
+		sessionInDB     *entity.RegistrationSession
+		expectedErrCode string
+	}{
+		{
+			name:            "session not found",
+			codeInRequest:   "123456",
+			sessionInDB:     nil,
+			expectedErrCode: "invalidCode",
+		},
+		{
+			name:          "code expired",
+			codeInRequest: "123456",
+			sessionInDB: &entity.RegistrationSession{
+				Email:       "test@test.com",
+				Code:        hashedCode,
+				CodeExpires: time.Now().Add(-1 * time.Minute),
+			},
+			expectedErrCode: "codeExpired",
+		},
+		{
+			name:          "invalid code",
+			codeInRequest: "999999",
+			sessionInDB: &entity.RegistrationSession{
+				Email:       "test@test.com",
+				Code:        hashedCode,
+				CodeExpires: time.Now().Add(1 * time.Minute),
+			},
+			expectedErrCode: "invalidCode",
+		},
+		{
+			name:          "code empty",
+			codeInRequest: "",
+			sessionInDB: &entity.RegistrationSession{
+				Email:       "test@test.com",
+				Code:        hashedCode,
+				CodeExpires: time.Now().Add(1 * time.Minute),
+			},
+			expectedErrCode: "invalidCode",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			service, mockRepo, mockProvider := setupService(t)
+
+			userData := map[string]any{
+				"email": "test@test.com",
+				"code":  tt.codeInRequest,
+			}
+
+			mockProvider.On("ValidateAccountData", mock.Anything, userData, "en").Return(nil)
+			mockRepo.On("FindByEmail", mock.Anything, "test@test.com").Return(tt.sessionInDB, nil)
+
+			err := service.ConfirmRegistration(context.Background(), userData, "en")
+
+			assert.Error(t, err)
+			validationErr, ok := err.(*commonEntity.BaseValidationError)
+			assert.True(t, ok)
+			assert.Equal(t, tt.expectedErrCode, validationErr.Code)
+
+			mockProvider.AssertExpectations(t)
+			mockRepo.AssertExpectations(t)
+		})
+	}
+}
