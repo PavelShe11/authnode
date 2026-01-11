@@ -9,6 +9,7 @@ import (
 	"github.com/PavelShe11/studbridge/authMicro/internal/entity"
 	"github.com/PavelShe11/studbridge/authMicro/test/fixtures"
 	"github.com/PavelShe11/studbridge/authMicro/test/mocks"
+	"github.com/PavelShe11/studbridge/authMicro/utlis/hash"
 	commonEntity "github.com/PavelShe11/studbridge/common/entity"
 	"github.com/PavelShe11/studbridge/common/logger"
 
@@ -138,6 +139,40 @@ func TestRegister_ValidationError_ReturnsError(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, result)
 	assert.Equal(t, validationErr, err)
+
+	mockProvider.AssertExpectations(t)
+	mockRepo.AssertExpectations(t)
+}
+
+// TestConfirmRegistration_Success - valid code, account created
+func TestConfirmRegistration_Success(t *testing.T) {
+	t.Parallel()
+
+	service, mockRepo, mockProvider := setupService(t)
+
+	plainCode := "123456"
+	hashedCode, _ := hash.HashCode(plainCode)
+
+	userData := map[string]any{
+		"email": "test@test.com",
+		"code":  plainCode,
+	}
+
+	existingSession := &entity.RegistrationSession{
+		Email:       "test@test.com",
+		Code:        hashedCode,
+		CodeExpires: time.Now().Add(1 * time.Minute),
+		CreatedAt:   time.Now(),
+	}
+
+	mockProvider.On("ValidateAccountData", mock.Anything, userData, "en").Return(nil)
+	mockRepo.On("FindByEmail", mock.Anything, "test@test.com").Return(existingSession, nil)
+	mockProvider.On("CreateAccount", mock.Anything, userData, "en").Return(nil)
+	mockRepo.On("DeleteByEmail", mock.Anything, "test@test.com").Return(nil)
+
+	err := service.ConfirmRegistration(context.Background(), userData, "en")
+
+	assert.NoError(t, err)
 
 	mockProvider.AssertExpectations(t)
 	mockRepo.AssertExpectations(t)
