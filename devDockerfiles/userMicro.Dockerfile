@@ -16,7 +16,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -gcflags "all=-N -l" -o user-app ./userMic
 FROM alpine:3.19 AS run-debug
 WORKDIR /app
 COPY --from=builder-debug /workspace/user-app .
-COPY --from=builder-debug /workspace/userMicro/internal/infrastructure/adapter/repository/database/migrations /migrations
+COPY --from=builder-debug /workspace/userMicro/internal/infrastructure/outbound/repository/database/migrations /migrations
 COPY --from=builder-debug /workspace/userMicro/locales ./locales
 COPY --from=builder-debug /go/bin/dlv /usr/local/bin/dlv
 EXPOSE 80
