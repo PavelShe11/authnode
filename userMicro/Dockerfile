@@ -32,7 +32,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o user-app ./cmd/app
 FROM alpine:3.19 AS run-debug
 WORKDIR /app
 COPY --from=builder-debug /app/userMicro/user-app .
-COPY --from=builder-debug /app/userMicro/internal/infrastructure/adapter/repository/database/migrations /migrations
+COPY --from=builder-debug /app/userMicro/internal/infrastructure/outbound/repository/database/migrations /migrations
 COPY --from=builder-debug /app/userMicro/locales ./locales
 COPY --from=builder-debug /go/bin/dlv /usr/local/bin/dlv
 EXPOSE 40001
@@ -42,7 +42,7 @@ CMD dlv exec ./user-app --headless --listen=:40001 --api-version=2 --accept-mult
 FROM alpine:3.19 AS run-release
 WORKDIR /app
 COPY --from=builder-release /app/userMicro/user-app .
-COPY --from=builder-release /app/userMicro/internal/infrastructure/adapter/repository/database/migrations /migrations
+COPY --from=builder-release /app/userMicro/internal/infrastructure/outbound/repository/database/migrations /migrations
 COPY --from=builder-release /app/userMicro/locales ./locales
 EXPOSE 80
 CMD ["./user-app"]

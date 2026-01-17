@@ -30,7 +30,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o auth-app ./cmd/app
 FROM alpine:3.19 AS run-debug
 WORKDIR /app
 COPY --from=builder-debug /app/authMicro/auth-app .
-COPY --from=builder-debug /app/authMicro/internal/infrastructure/adapter/repository/database/migrations /migrations
+COPY --from=builder-debug /app/authMicro/internal/infrastructure/outbound/repository/database/migrations /migrations
 COPY --from=builder-debug /app/authMicro/locales ./locales
 COPY --from=builder-debug /go/bin/dlv /usr/local/bin/dlv
 EXPOSE 40000
@@ -40,7 +40,7 @@ CMD dlv exec ./auth-app --headless --listen=:40000 --api-version=2 --accept-mult
 FROM alpine:3.19 AS run-release
 WORKDIR /app
 COPY --from=builder-release /app/authMicro/auth-app .
-COPY --from=builder-release /app/authMicro/internal/infrastructure/adapter/repository/database/migrations /migrations
+COPY --from=builder-release /app/authMicro/internal/infrastructure/outbound/repository/database/migrations /migrations
 COPY --from=builder-release /app/authMicro/locales ./locales
 EXPOSE 80
 CMD ./auth-app
