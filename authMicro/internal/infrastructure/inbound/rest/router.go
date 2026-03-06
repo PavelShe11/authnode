@@ -1,3 +1,21 @@
+// Package rest provides the HTTP REST API for the auth microservice.
+//
+// @title           StudBridge Auth API
+// @version         1.0
+// @description     Сервис аутентификации: регистрация, вход по OTP-коду, управление JWT токенами.
+// @BasePath        /auth/v1
+//
+// @contact.name   Pavel Sheludyakov
+// @contact.url    https://github.com/PavelShe11/studBridge
+//
+// @tag.name registration
+// @tag.description Двухшаговая регистрация с OTP-кодом
+//
+// @tag.name login
+// @tag.description Двухшаговый вход с OTP-кодом
+//
+// @tag.name tokens
+// @tag.description Управление JWT токенами
 package rest
 
 import (

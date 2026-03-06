@@ -24,6 +24,19 @@ func NewRefreshTokenHandler(logger logger.Logger, tokenService *service.TokenSer
 	}
 }
 
+// RefreshToken godoc
+// @Summary      Обновить токены
+// @Description  Проверяет refresh токен и возвращает новую пару JWT токенов (access + refresh). Старый refresh токен инвалидируется.
+// @Description  Обязательное поле: refreshToken (string).
+// @Tags         tokens
+// @Accept       json
+// @Produce      json
+// @Param        request  body      object                true  "Refresh токен"
+// @Success      200      {object}  models.TokensResponse
+// @Failure      400      {object}  entity.BaseError
+// @Failure      401      "Токен недействителен или истёк"
+// @Failure      500      {object}  entity.BaseError
+// @Router       /refreshToken [post]
 func (h *RefreshToken) RefreshToken(c echo.Context) error {
 	var req map[string]interface{}
 	if err := c.Bind(&req); err != nil {

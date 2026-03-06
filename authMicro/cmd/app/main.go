@@ -7,6 +7,7 @@ import (
 	"syscall"
 	"time"
 
+	_ "github.com/PavelShe11/studbridge/authMicro/docs"
 	"github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/inbound/rest"
 	handler2 "github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/inbound/rest/handler"
 	grpcAdapter "github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/outbound/grpc"

@@ -29,6 +29,18 @@ func NewLoginHandler(
 	}
 }
 
+// SendLoginCode godoc
+// @Summary      Отправить код входа
+// @Description  Находит аккаунт по email и генерирует OTP-код для входа.
+// @Description  Обязательное поле: email (string).
+// @Tags         login
+// @Accept       json
+// @Produce      json
+// @Param        request  body      object               true  "Email пользователя"
+// @Success      200      {object}  models2.LoginResponse
+// @Failure      400      {object}  entity.BaseValidationError
+// @Failure      500      {object}  entity.BaseError
+// @Router       /login/sendCodeEmail [post]
 func (h *Login) SendLoginCode(c echo.Context) error {
 	var req map[string]interface{}
 	if err := c.Bind(&req); err != nil {
@@ -48,6 +60,19 @@ func (h *Login) SendLoginCode(c echo.Context) error {
 	return c.JSON(http.StatusOK, models2.NewLoginResponse(answer))
 }
 
+// ConfirmEmail godoc
+// @Summary      Подтвердить вход
+// @Description  Проверяет OTP-код и возвращает пару JWT токенов (access + refresh).
+// @Description  Обязательные поля: email (string), code (string).
+// @Tags         login
+// @Accept       json
+// @Produce      json
+// @Param        request  body      object               true  "Email и OTP-код"
+// @Success      200      {object}  models2.TokensResponse
+// @Failure      400      {object}  entity.BaseValidationError
+// @Failure      401      {object}  entity.BaseError
+// @Failure      500      {object}  entity.BaseError
+// @Router       /login/confirmEmail [post]
 func (h *Login) ConfirmEmail(c echo.Context) error {
 	var req map[string]interface{}
 	if err := c.Bind(&req); err != nil {
