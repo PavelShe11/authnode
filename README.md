@@ -6,21 +6,21 @@ Backend системы аутентификации и управления ак
 
 ```
                           ┌─────────────────────────────────────┐
-                          │           Client (HTTP/REST)         │
+                          │           Client (HTTP/REST)        │
                           └──────────────────┬──────────────────┘
                                              │
                           ┌──────────────────▼──────────────────┐
-                          │         Traefik API Gateway          │
-                          │         localhost:80 / :8088         │
+                          │         Traefik API Gateway         │
+                          │         localhost:80 / :8088        │
                           └──────────────────┬──────────────────┘
                                              │  /auth/v1/*
                           ┌──────────────────▼──────────────────┐
-                          │           Auth Service               │
-                          │     REST (Echo) + gRPC client        │
-                          │                                      │
-                          │  • Registration flow (2-step)        │
-                          │  • Login flow (2-step OTP)           │
-                          │  • JWT refresh tokens                │
+                          │           Auth Service              │
+                          │     REST (Echo) + gRPC client       │
+                          │                                     │
+                          │  • Registration flow (2-step)       │
+                          │  • Login flow (2-step OTP)          │
+                          │  • JWT refresh tokens               │
                           └──────┬─────────────────┬────────────┘
                                  │ gRPC            │ SQL
                      ┌───────────▼────────┐  ┌─────▼──────────┐
