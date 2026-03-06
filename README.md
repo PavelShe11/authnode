@@ -149,7 +149,6 @@ studBridge/
 │   ├── grpcApi/                # Shared gRPC generated code + proto files
 │   │   └── proto/              # .proto definitions (account_service, error)
 │   ├── internal/
-│   │   ├── api/                # (alias) → infrastructure/inbound
 │   │   ├── config/             # Env-based конфигурация
 │   │   ├── entity/             # Доменные сущности (чистые Go-структуры)
 │   │   ├── port/               # Интерфейсы репозиториев и провайдеров
