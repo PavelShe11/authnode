@@ -1,53 +1,130 @@
 services:
-  auth-db-postgres:
-    image: postgres:16-alpine
-    container_name: auth-db-postgres
-    environment:
-      POSTGRES_DB: ${AUTH_POSTGRES_DB_NAME}
-      POSTGRES_USER: ${AUTH_POSTGRES_DB_USER}
-      POSTGRES_PASSWORD: ${AUTH_POSTGRES_DB_PASSWORD}
+  traefik:
+    image: traefik:v3.4
+    security_opt:
+      - no-new-privileges:true
+    env_file:
+      - ./.env
     ports:
-      - "${AUTH_POSTGRES_DB_EXTERNAL_PORT}:${AUTH_POSTGRES_DB_INTERNAL_PORT}"
+      - "80:80"
+      - "8088:8080"
+    labels:
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=${BASIC_AUTH_USER_PASS}"
     volumes:
-      - auth_db_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${AUTH_POSTGRES_DB_USER}"]
-      interval: ${HEALTHCHECK_INTERVAL}
-      timeout: ${HEALTHCHECK_TIMEOUT}
-      retries: ${HEALTHCHECK_RETRIES}
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefic.yml:/etc/traefik/traefik.yml:ro
+      - ./dynamic:/dynamic:ro
     restart: unless-stopped
     networks:
-      - auth-network
+      - shared-network
+
 
   auth-service:
     build:
-      context: ./component/authMicro
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./authMicro/Dockerfile
+      target: run-release
     container_name: auth-service
     environment:
-      ServerAddr: "0.0.0.0:8080"
-      DBHost: ${AUTH_POSTGRES_DB_HOST}
-      DBPort: ${AUTH_POSTGRES_DB_INTERNAL_PORT}
-      DBUsername: ${AUTH_POSTGRES_DB_USER}
-      DBPassword: ${AUTH_POSTGRES_DB_PASSWORD}
-      DBName: ${AUTH_POSTGRES_DB_NAME}
-      DBSSLMode: ${AUTH_PGSSLMODE_STATUS}
-      JWTSecret: ${JWT_SECRET}
-      JWTAccessTokenExpiration: 900000
-      JWTRefreshTokenExpiration: 604800000
-    ports:
-      - "8080:8080"
+      LogLevel: ${LOG_LEVEL}
+      LogFormat: ${LOG_FORMAT:-console}
+      DBHost: auth-db-postgres
+      DBName: ${AUTH_PG_DB_NAME:-auth-micro-db}
+      DBUsername: ${AUTH_PG_DB_USER:-postgres}
+      DBPassword: ${AUTH_PG_DB_PASSWORD:-postgres}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_EXPIRATION: ${ACCESS_TOKEN_LIFETIME:-900}
+      JWT_REFRESH_EXPIRATION: ${REFRESH_TOKEN_LIFETIME:-604800}
+      CodeTTL: ${CODE_TTL}
+      CodePattern: ${CODE_PATTERN}
+      CodeMaxLength: ${CODE_MAX_LENGTH}
+      AccountServiceGrpcAddr: "dns:///user-service:9092"
+      InternalAPIKey: ${INTERNAL_API_KEY}
     depends_on:
       auth-db-postgres:
         condition: service_healthy
     restart: unless-stopped
     networks:
       - auth-network
+      - shared-network
+
+  auth-db-postgres:
+    image: postgres:16-alpine
+    container_name: auth-db-postgres
+    environment:
+      POSTGRES_DB: ${AUTH_PG_DB_NAME:-auth-micro-db}
+      POSTGRES_USER: ${AUTH_PG_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${AUTH_PG_DB_PASSWORD:-postgres}
+      PGSSLMODE: ${AUTH_PG_SSLMODE_STATUS:-disable}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${AUTH_PG_DB_USER:-postgres}" ]
+      interval: ${HEALTHCHECK_INTERVAL:-1s}
+      timeout: ${HEALTHCHECK_TIMEOUT:-5s}
+      retries: ${HEALTHCHECK_RETRIES:-10}
+    ports:
+      - "5433:5432"
+    restart: unless-stopped
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+    networks:
+      - auth-network
+
+
+  user-service:
+    build:
+      context: .
+      dockerfile: ./userMicro/Dockerfile
+      target: run-release
+    container_name: user-service
+    environment:
+      LogLevel: ${LOG_LEVEL}
+      LogFormat: ${LOG_FORMAT:-console}
+      DBHost: user-db-postgres
+      DBName: ${USER_PG_DB_NAME:-user-micro-db}
+      DBUsername: ${USER_PG_DB_USER:-postgres}
+      DBPassword: ${USER_PG_DB_PASSWORD:-postgres}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_EXPIRATION: ${ACCESS_TOKEN_LIFETIME:-900}
+      JWT_REFRESH_EXPIRATION: ${REFRESH_TOKEN_LIFETIME:-604800}
+      InternalAPIKey: ${INTERNAL_API_KEY}
+    depends_on:
+      user-db-postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - user-network
+      - shared-network
+
+  user-db-postgres:
+    image: postgres:16-alpine
+    container_name: user-db-postgres
+    environment:
+      POSTGRES_DB: ${USER_PG_DB_NAME:-user-micro-db}
+      POSTGRES_USER: ${USER_PG_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${USER_PG_DB_PASSWORD:-postgres}
+      PGSSLMODE: ${USER_PG_SSLMODE_STATUS:-disable}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${USER_PG_DB_USER:-postgres}" ]
+      interval: ${HEALTHCHECK_INTERVAL:-1s}
+      timeout: ${HEALTHCHECK_TIMEOUT:-5s}
+      retries: ${HEALTHCHECK_RETRIES:-10}
+    ports:
+      - "5434:5432"
+    restart: unless-stopped
+    volumes:
+      - user_db_data:/var/lib/postgresql/data
+    networks:
+      - user-network
+
 
 volumes:
   auth_db_data:
+  user_db_data:
 
 networks:
+  shared-network:
+    driver: bridge
   auth-network:
-    name: auth-network
+    driver: bridge
+  user-network:
     driver: bridge

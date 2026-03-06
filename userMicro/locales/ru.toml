@@ -1,0 +1,67 @@
+[internalError]
+other = "Внутренняя ошибка сервера"
+
+[validationError]
+other = "Ошибка валидации"
+
+# Простые validation теги
+[required]
+other = "Это поле обязательно для заполнения"
+
+[email]
+other = "Не корректный email"
+
+[url]
+other = "Должен быть корректный URL"
+
+[alpha]
+other = "Должно содержать только буквы"
+
+[alphanum]
+other = "Должно содержать только буквы и цифры"
+
+[numeric]
+other = "Должно быть числом"
+
+# Параметризованные validation теги
+[min]
+other = "Минимум {{.value}} символов"
+
+[max]
+other = "Максимум {{.value}} символов"
+
+[len]
+other = "Должно быть ровно {{.value}} символов"
+
+[gte]
+other = "Должно быть больше или равно {{.value}}"
+
+[lte]
+other = "Должно быть меньше или равно {{.value}}"
+
+[gt]
+other = "Должно быть больше {{.value}}"
+
+[lt]
+other = "Должно быть меньше {{.value}}"
+
+[eq]
+other = "Должно быть равно {{.value}}"
+
+[ne]
+other = "Не должно быть равно {{.value}}"
+
+[oneof]
+other = "Должно быть одним из: {{.values}}"
+
+[eqfield]
+other = "Должно быть равно полю {{.field}}"
+
+[nefield]
+other = "Не должно быть равно полю {{.field}}"
+
+[gtfield]
+other = "Должно быть больше поля {{.field}}"
+
+[ltfield]
+other = "Должно быть меньше поля {{.field}}"

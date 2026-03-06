@@ -1,0 +1,28 @@
+services:
+  auth-service:
+    build:
+      context: .
+      dockerfile: devDockerfiles/authMicro.Dockerfile
+      target: run-debug
+    environment:
+      DEBUG_PORT: ${AUTH_DEBUG_PORT:-40000}
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp=unconfined
+    ports:
+      - "${AUTH_DEBUG_PORT:-40000}:${AUTH_DEBUG_PORT:-40000}"
+
+  user-service:
+    build:
+      context: .
+      dockerfile: devDockerfiles/userMicro.Dockerfile
+      target: run-debug
+    environment:
+      DEBUG_PORT: ${USER_DEBUG_PORT:-40001}
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp=unconfined
+    ports:
+      - "${USER_DEBUG_PORT:-40001}:${USER_DEBUG_PORT:-40001}"

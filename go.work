@@ -1,0 +1,8 @@
+go 1.25.5
+
+use (
+	./authMicro
+	./authMicro/grpcApi
+	./common
+	./userMicro
+)

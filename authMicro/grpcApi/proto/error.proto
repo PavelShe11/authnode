@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option go_package = "github.com/PavelShe11/studbridge/authMicro/grpcApi";
+
+enum ErrorCode {
+  VALIDATION = 0;
+  INTERNAL = 1;
+}
+
+message Error {
+  ErrorCode code = 1;
+  repeated FieldError detailedErrors = 2;
+
+  message FieldError {
+    string name = 1;
+    string message = 2;
+  }
+}

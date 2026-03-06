@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+option go_package = "github.com/PavelShe11/studbridge/authMicro/grpcApi";
+
+import "google/protobuf/struct.proto";
+import "error.proto";
+
+service AccountService {
+  rpc CreateAccount(CreateAccountRequest) returns (CreateAccountResponse) {}
+  rpc GetAccountByEmail(GetAccountByEmailRequest) returns (GetAccountResponse) {}
+  rpc GetAccessTokenPayload(GetAccessTokenPayloadRequest) returns (GetAccessTokenPayloadResponse) {}
+  rpc ValidateAccountData(ValidateAccountRequest) returns (ValidateAccountResponse) {}
+}
+
+//
+// =====================
+// CreateAccount
+// =====================
+//
+
+message CreateAccountRequest {
+  map<string, google.protobuf.Value> userData = 1;
+}
+
+message CreateAccountResponse {
+  optional Error error = 1;
+}
+
+//
+// =====================
+// GetAccountByEmail
+// =====================
+//
+
+message GetAccountByEmailRequest {
+  string email = 1;
+}
+
+message GetAccountResponse {
+  oneof result {
+    Account account = 1;
+    Error error = 2;
+  }
+
+  message Account {
+    string accountId = 1;
+    string email = 2;
+  }
+}
+
+//
+// =====================
+// GetAccessTokenPayload
+// =====================
+//
+
+message GetAccessTokenPayloadRequest {
+  string accountId = 1;
+}
+
+message GetAccessTokenPayloadResponse {
+  oneof result {
+    AccessTokenClaims claims = 1;
+    Error error = 2;
+  }
+}
+
+message AccessTokenClaims {
+  map<string, google.protobuf.Value> values = 1;
+}
+
+//
+// =====================
+// Validation
+// =====================
+//
+
+message ValidateAccountRequest {
+  map<string, google.protobuf.Value> userData = 1;
+}
+
+message ValidateAccountResponse {
+  optional Error error = 1;
+}
