@@ -58,12 +58,11 @@ Backend системы аутентификации и управления ак
 | Database         | PostgreSQL 16-Alpine          |
 | Migrations       | golang-migrate                |
 | Auth             | JWT (access + refresh tokens) |
-| Validation       | go-playground/validator       |
 | Logging          | Uber Zap                      |
 | Localization     | go-i18n (en, ru)              |
 | Testing          | Testcontainers, Mockery       |
 | API Docs         | Swagger (swaggo)              |
-| Containerization | Docker Compose                |
+| Containerization | Docker                |
 
 ## Quick Start
 
