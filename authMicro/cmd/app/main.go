@@ -10,8 +10,8 @@ import (
 	_ "github.com/PavelShe11/studbridge/authMicro/docs"
 	"github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/inbound/rest"
 	handler2 "github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/inbound/rest/handler"
-	grpcAdapter "github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/outbound/grpc"
 	emailAdapter "github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/outbound/email"
+	grpcAdapter "github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/outbound/grpc"
 	"github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/outbound/repository"
 	"github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/outbound/repository/database"
 	"github.com/PavelShe11/studbridge/authMicro/internal/usecase"
@@ -33,11 +33,6 @@ import (
 	"google.golang.org/grpc/credentials/alts"
 	"google.golang.org/grpc/credentials/insecure"
 )
-
-/**
-TODO: Подумать над запуском задачи по удалению истёкших сессий по таймеру
-TODO: Добавить тесты
-*/
 
 type commonModule struct {
 	logger     logger.Logger
