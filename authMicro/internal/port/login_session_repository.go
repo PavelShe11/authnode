@@ -3,7 +3,7 @@ package port
 import (
 	"context"
 
-	"github.com/PavelShe11/studbridge/authMicro/internal/entity"
+	"github.com/PavelShe11/authnode/authMicro/internal/entity"
 )
 
 // LoginSessionRepository - интерфейс для работы с сессиями входа

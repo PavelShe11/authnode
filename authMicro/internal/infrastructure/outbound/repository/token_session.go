@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/PavelShe11/studbridge/authMicro/internal/entity"
-	"github.com/PavelShe11/studbridge/authMicro/internal/port"
+	"github.com/PavelShe11/authnode/authMicro/internal/entity"
+	"github.com/PavelShe11/authnode/authMicro/internal/port"
 	trmsql "github.com/avito-tech/go-transaction-manager/drivers/sqlx/v2"
 	"github.com/jmoiron/sqlx"
 )

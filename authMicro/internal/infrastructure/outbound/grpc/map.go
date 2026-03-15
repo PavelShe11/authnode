@@ -1,8 +1,8 @@
 package grpc
 
 import (
-	"github.com/PavelShe11/studbridge/authMicro/grpcApi"
-	commonEntity "github.com/PavelShe11/studbridge/common/entity"
+	"github.com/PavelShe11/authnode/authMicro/grpcApi"
+	commonEntity "github.com/PavelShe11/authnode/common/entity"
 )
 
 func GrpcErrorMapToError(grpcErr *grpcApi.Error) error {

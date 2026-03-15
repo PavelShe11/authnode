@@ -1,10 +1,10 @@
-module github.com/PavelShe11/studbridge/authMicro
+module github.com/PavelShe11/authnode/authMicro
 
 go 1.25.5
 
 require (
-	github.com/PavelShe11/studbridge/authMicro/grpcApi v0.1.1
-	github.com/PavelShe11/studbridge/common v0.1.2
+	github.com/PavelShe11/authnode/authMicro/grpcApi v0.0.0-00010101000000-000000000000
+	github.com/PavelShe11/authnode/common v0.0.0-00010101000000-000000000000
 	github.com/avito-tech/go-transaction-manager/drivers/sqlx/v2 v2.0.2
 	github.com/avito-tech/go-transaction-manager/trm/v2 v2.0.2
 	github.com/golang-jwt/jwt/v5 v5.3.0
@@ -115,4 +115,9 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260209200024-4cfbd4190f57 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+)
+
+replace (
+	github.com/PavelShe11/authnode/authMicro/grpcApi => ./grpcApi
+	github.com/PavelShe11/authnode/common => ../common
 )

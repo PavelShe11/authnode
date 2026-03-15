@@ -15,15 +15,15 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/PavelShe11/studbridge/authMicro/internal/config"
-	"github.com/PavelShe11/studbridge/authMicro/internal/entity"
-	"github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/inbound/rest/handler"
-	"github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/inbound/rest/models"
-	"github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/outbound/repository"
-	"github.com/PavelShe11/studbridge/authMicro/internal/service"
-	"github.com/PavelShe11/studbridge/authMicro/test/helpers"
-	"github.com/PavelShe11/studbridge/authMicro/test/mocks"
-	"github.com/PavelShe11/studbridge/authMicro/utlis/hash"
+	"github.com/PavelShe11/authnode/authMicro/internal/config"
+	"github.com/PavelShe11/authnode/authMicro/internal/entity"
+	"github.com/PavelShe11/authnode/authMicro/internal/infrastructure/inbound/rest/handler"
+	"github.com/PavelShe11/authnode/authMicro/internal/infrastructure/inbound/rest/models"
+	"github.com/PavelShe11/authnode/authMicro/internal/infrastructure/outbound/repository"
+	"github.com/PavelShe11/authnode/authMicro/internal/service"
+	"github.com/PavelShe11/authnode/authMicro/test/helpers"
+	"github.com/PavelShe11/authnode/authMicro/test/mocks"
+	"github.com/PavelShe11/authnode/authMicro/utlis/hash"
 
 	trmsql "github.com/avito-tech/go-transaction-manager/drivers/sqlx/v2"
 	"github.com/jmoiron/sqlx"
@@ -152,7 +152,9 @@ func setupE2E(t *testing.T) (*handler.Register, *mocks.MockAccountProvider, *ech
 		CodeMaxLength: 6,
 		CodeTTL:       2 * time.Minute,
 	}
-	realService := service.NewRegistrationService(repo, mockAccountProvider, testLogger, cfg)
+	mockEmailSender := new(mocks.MockEmailSender)
+	mockEmailSender.On("SendVerificationCode", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
+	realService := service.NewRegistrationService(repo, mockAccountProvider, mockEmailSender, testLogger, cfg)
 
 	// Real handler (translator not used in tested methods, pass nil)
 	h := handler.NewRegisterHandler(testLogger, realService, nil)

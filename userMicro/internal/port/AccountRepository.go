@@ -3,7 +3,7 @@ package port
 import (
 	"context"
 
-	"github.com/PavelShe11/studbridge/user/internal/entity"
+	"github.com/PavelShe11/authnode/user/internal/entity"
 )
 
 type AccountRepository interface {

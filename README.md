@@ -142,7 +142,7 @@ go test -v -run TestIntegration ./...
 ## Project Structure
 
 ```
-studBridge/
+authnode/
 ├── authMicro/                  # Auth service (REST API + gRPC client)
 │   ├── cmd/app/main.go         # Точка входа, DI-сборка приложения
 │   ├── grpcApi/                # Shared gRPC generated code + proto files

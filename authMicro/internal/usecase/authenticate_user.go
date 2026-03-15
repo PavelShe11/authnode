@@ -3,8 +3,8 @@ package usecase
 import (
 	"context"
 
-	"github.com/PavelShe11/studbridge/authMicro/internal/entity"
-	"github.com/PavelShe11/studbridge/authMicro/internal/service"
+	"github.com/PavelShe11/authnode/authMicro/internal/entity"
+	"github.com/PavelShe11/authnode/authMicro/internal/service"
 	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 )
 

@@ -3,11 +3,11 @@ package handler
 import (
 	"net/http"
 
-	"github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/inbound/rest/httpErrorHandler"
-	"github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/inbound/rest/models"
-	"github.com/PavelShe11/studbridge/authMicro/internal/service"
-	"github.com/PavelShe11/studbridge/common/logger"
-	"github.com/PavelShe11/studbridge/common/translator" // Added translator import
+	"github.com/PavelShe11/authnode/authMicro/internal/infrastructure/inbound/rest/httpErrorHandler"
+	"github.com/PavelShe11/authnode/authMicro/internal/infrastructure/inbound/rest/models"
+	"github.com/PavelShe11/authnode/authMicro/internal/service"
+	"github.com/PavelShe11/authnode/common/logger"
+	"github.com/PavelShe11/authnode/common/translator" // Added translator import
 
 	"github.com/labstack/echo/v4"
 )

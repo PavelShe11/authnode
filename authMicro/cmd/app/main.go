@@ -7,36 +7,32 @@ import (
 	"syscall"
 	"time"
 
-	_ "github.com/PavelShe11/studbridge/authMicro/docs"
-	"github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/inbound/rest"
-	handler2 "github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/inbound/rest/handler"
-	grpcAdapter "github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/outbound/grpc"
-	"github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/outbound/repository"
-	"github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/outbound/repository/database"
-	"github.com/PavelShe11/studbridge/authMicro/internal/usecase"
+	_ "github.com/PavelShe11/authnode/authMicro/docs"
+	"github.com/PavelShe11/authnode/authMicro/internal/infrastructure/inbound/rest"
+	handler2 "github.com/PavelShe11/authnode/authMicro/internal/infrastructure/inbound/rest/handler"
+	emailAdapter "github.com/PavelShe11/authnode/authMicro/internal/infrastructure/outbound/email"
+	grpcAdapter "github.com/PavelShe11/authnode/authMicro/internal/infrastructure/outbound/grpc"
+	"github.com/PavelShe11/authnode/authMicro/internal/infrastructure/outbound/repository"
+	"github.com/PavelShe11/authnode/authMicro/internal/infrastructure/outbound/repository/database"
+	"github.com/PavelShe11/authnode/authMicro/internal/usecase"
 	trmsql "github.com/avito-tech/go-transaction-manager/drivers/sqlx/v2"
 	trmcontext "github.com/avito-tech/go-transaction-manager/trm/v2/context"
 
-	"github.com/PavelShe11/studbridge/authMicro/grpcApi"
-	"github.com/PavelShe11/studbridge/authMicro/internal/config"
-	"github.com/PavelShe11/studbridge/authMicro/internal/port"
-	"github.com/PavelShe11/studbridge/authMicro/internal/service"
-	"github.com/PavelShe11/studbridge/authMicro/utlis/interceptor"
-	jwtAdapter "github.com/PavelShe11/studbridge/authMicro/utlis/tokenGenerator"
-	"github.com/PavelShe11/studbridge/common/logger"
-	"github.com/PavelShe11/studbridge/common/translator"
-	"github.com/PavelShe11/studbridge/common/validation"
+	"github.com/PavelShe11/authnode/authMicro/grpcApi"
+	"github.com/PavelShe11/authnode/authMicro/internal/config"
+	"github.com/PavelShe11/authnode/authMicro/internal/port"
+	"github.com/PavelShe11/authnode/authMicro/internal/service"
+	"github.com/PavelShe11/authnode/authMicro/utlis/interceptor"
+	jwtAdapter "github.com/PavelShe11/authnode/authMicro/utlis/tokenGenerator"
+	"github.com/PavelShe11/authnode/common/logger"
+	"github.com/PavelShe11/authnode/common/translator"
+	"github.com/PavelShe11/authnode/common/validation"
 	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 	"github.com/jmoiron/sqlx"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/alts"
 	"google.golang.org/grpc/credentials/insecure"
 )
-
-/**
-TODO: Подумать над запуском задачи по удалению истёкших сессий по таймеру
-TODO: Добавить тесты
-*/
 
 type commonModule struct {
 	logger     logger.Logger
@@ -61,6 +57,8 @@ type repositoriesModule struct {
 type infrastructureModule struct {
 	accountProvider port.AccountProvider
 	tokenGenerator  jwtAdapter.TokenGenerator
+	emailSender     port.EmailSender
+	smtpSender      *emailAdapter.SmtpEmailSender
 }
 
 type servicesModule struct {
@@ -70,11 +68,12 @@ type servicesModule struct {
 }
 
 type app struct {
-	common       *commonModule
-	grpc         *grpcServiceClientsModule
-	repositories *repositoriesModule
-	services     *servicesModule
-	router       *rest.Router
+	common         *commonModule
+	grpc           *grpcServiceClientsModule
+	repositories   *repositoriesModule
+	infrastructure *infrastructureModule
+	services       *servicesModule
+	router         *rest.Router
 }
 
 func newCommonModule() *commonModule {
@@ -180,9 +179,18 @@ func newInfrastructureModule(
 
 	tokenGenerator := jwtAdapter.NewJwtTokenAdapter(commonModule.config.JWT)
 
+	smtpEmailSender := emailAdapter.NewSmtpEmailSender(
+		commonModule.config.Smtp,
+		commonModule.translator,
+		commonModule.config.CodeGenConfig.CodeTTL,
+		commonModule.logger,
+	)
+
 	return &infrastructureModule{
 		accountProvider: accountProvider,
 		tokenGenerator:  tokenGenerator,
+		emailSender:     smtpEmailSender,
+		smtpSender:      smtpEmailSender,
 	}
 }
 
@@ -196,16 +204,20 @@ func newServicesModule(
 	validator := commonModule.validator
 	accountProvider := infrastructureModule.accountProvider
 
+	emailSender := infrastructureModule.emailSender
+
 	return &servicesModule{
 		registrationService: service.NewRegistrationService(
 			repositoriesModule.registrationSessionRepository,
 			accountProvider,
+			emailSender,
 			l,
 			conf.CodeGenConfig,
 		),
 		loginService: service.NewLoginService(
 			repositoriesModule.loginSessionRepository,
 			accountProvider,
+			emailSender,
 			l,
 			conf.CodeGenConfig,
 			validator,
@@ -243,11 +255,12 @@ func newApp() *app {
 	)
 
 	return &app{
-		common:       common,
-		grpc:         grpcClient,
-		repositories: repositories,
-		services:     services,
-		router:       router,
+		common:         common,
+		grpc:           grpcClient,
+		repositories:   repositories,
+		infrastructure: infrastructure,
+		services:       services,
+		router:         router,
 	}
 }
 
@@ -267,6 +280,7 @@ func (a *app) shutdown(ctx context.Context) {
 		a.common.logger.Errorf("Error during server shutdown: %v", err)
 	}
 
+	a.infrastructure.smtpSender.Close()
 	a.grpc.Close(a.common.logger)
 	a.repositories.Close(a.common.logger)
 

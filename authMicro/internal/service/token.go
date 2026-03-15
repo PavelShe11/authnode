@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/PavelShe11/studbridge/authMicro/internal/entity"
-	"github.com/PavelShe11/studbridge/authMicro/internal/port"
-	"github.com/PavelShe11/studbridge/authMicro/utlis/tokenGenerator"
-	commonEntity "github.com/PavelShe11/studbridge/common/entity"
-	"github.com/PavelShe11/studbridge/common/logger"
+	"github.com/PavelShe11/authnode/authMicro/internal/entity"
+	"github.com/PavelShe11/authnode/authMicro/internal/port"
+	"github.com/PavelShe11/authnode/authMicro/utlis/tokenGenerator"
+	commonEntity "github.com/PavelShe11/authnode/common/entity"
+	"github.com/PavelShe11/authnode/common/logger"
 )
 
 type TokenService struct {

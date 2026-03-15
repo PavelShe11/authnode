@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/PavelShe11/studbridge/user/internal/entity"
-	"github.com/PavelShe11/studbridge/user/internal/port"
+	"github.com/PavelShe11/authnode/user/internal/entity"
+	"github.com/PavelShe11/authnode/user/internal/port"
 
 	"github.com/jmoiron/sqlx"
 )

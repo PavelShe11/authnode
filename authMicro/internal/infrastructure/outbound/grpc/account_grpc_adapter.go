@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/PavelShe11/studbridge/authMicro/grpcApi"
-	"github.com/PavelShe11/studbridge/authMicro/internal/entity"
-	"github.com/PavelShe11/studbridge/authMicro/internal/port"
-	"github.com/PavelShe11/studbridge/authMicro/utlis/converter"
-	commonEntity "github.com/PavelShe11/studbridge/common/entity"
-	"github.com/PavelShe11/studbridge/common/logger"
+	"github.com/PavelShe11/authnode/authMicro/grpcApi"
+	"github.com/PavelShe11/authnode/authMicro/internal/entity"
+	"github.com/PavelShe11/authnode/authMicro/internal/port"
+	"github.com/PavelShe11/authnode/authMicro/utlis/converter"
+	commonEntity "github.com/PavelShe11/authnode/common/entity"
+	"github.com/PavelShe11/authnode/common/logger"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )

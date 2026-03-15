@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"strings"
 
-	commonEntity "github.com/PavelShe11/studbridge/common/entity"
+	commonEntity "github.com/PavelShe11/authnode/common/entity"
 
 	"github.com/go-playground/validator/v10"
 )

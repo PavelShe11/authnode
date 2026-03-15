@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/PavelShe11/studbridge/common/entity"
-	"github.com/PavelShe11/studbridge/common/logger"
+	"github.com/PavelShe11/authnode/common/entity"
+	"github.com/PavelShe11/authnode/common/logger"
 
 	"github.com/BurntSushi/toml"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
@@ -62,6 +62,25 @@ func NewTranslator(log logger.Logger) *Translator {
 		knownIDs: knownIDs,
 		log:      log,
 	}
+}
+
+// Translate translates a message by ID with optional template data and language preferences.
+// Returns the msgID as-is if the message is not found or translation fails.
+func (t *Translator) Translate(msgID string, params map[string]interface{}, langs ...string) string {
+	if _, ok := t.knownIDs[msgID]; !ok {
+		return msgID
+	}
+
+	localizer := i18n.NewLocalizer(t.bundle, langs...)
+	translated, err := localizer.Localize(&i18n.LocalizeConfig{
+		MessageID:    msgID,
+		TemplateData: params,
+	})
+	if err != nil {
+		t.log.Debugf("could not translate message '%s': %v", msgID, err)
+		return msgID
+	}
+	return translated
 }
 
 // TranslateError translates errors that implement TranslatableError interface.

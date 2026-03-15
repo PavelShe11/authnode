@@ -1,12 +1,12 @@
 // Package rest provides the HTTP REST API for the auth microservice.
 //
-// @title           StudBridge Auth API
+// @title           AuthNode Auth API
 // @version         1.0
 // @description     Сервис аутентификации: регистрация, вход по OTP-коду, управление JWT токенами.
 // @BasePath        /auth/v1
 //
 // @contact.name   Pavel Sheludyakov
-// @contact.url    https://github.com/PavelShe11/studBridge
+// @contact.url    https://github.com/PavelShe11/authnode
 //
 // @tag.name registration
 // @tag.description Двухшаговая регистрация с OTP-кодом
@@ -22,11 +22,11 @@ import (
 	"context"
 	"os"
 
-	handler2 "github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/inbound/rest/handler"
-	httpErrorHandler2 "github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/inbound/rest/httpErrorHandler"
-	mymiddleware "github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/inbound/rest/middleware"
-	"github.com/PavelShe11/studbridge/common/logger"
-	"github.com/PavelShe11/studbridge/common/translator"
+	handler2 "github.com/PavelShe11/authnode/authMicro/internal/infrastructure/inbound/rest/handler"
+	httpErrorHandler2 "github.com/PavelShe11/authnode/authMicro/internal/infrastructure/inbound/rest/httpErrorHandler"
+	mymiddleware "github.com/PavelShe11/authnode/authMicro/internal/infrastructure/inbound/rest/middleware"
+	"github.com/PavelShe11/authnode/common/logger"
+	"github.com/PavelShe11/authnode/common/translator"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"

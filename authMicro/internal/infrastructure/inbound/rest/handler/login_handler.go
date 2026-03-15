@@ -1,13 +1,14 @@
 package handler
 
 import (
-	models2 "github.com/PavelShe11/studbridge/authMicro/internal/infrastructure/inbound/rest/models"
-	"github.com/PavelShe11/studbridge/authMicro/internal/service"
-	"github.com/PavelShe11/studbridge/authMicro/internal/usecase"
-	"github.com/PavelShe11/studbridge/common/logger"
+	models2 "github.com/PavelShe11/authnode/authMicro/internal/infrastructure/inbound/rest/models"
+	"github.com/PavelShe11/authnode/authMicro/internal/service"
+	"github.com/PavelShe11/authnode/authMicro/internal/usecase"
+	"github.com/PavelShe11/authnode/common/logger"
 
 	"net/http"
 
+	"github.com/PavelShe11/authnode/authMicro/internal/infrastructure/inbound/rest/httpErrorHandler"
 	"github.com/labstack/echo/v4"
 )
 
@@ -52,7 +53,8 @@ func (h *Login) SendLoginCode(c echo.Context) error {
 	if !ok {
 		email = ""
 	}
-	var answer, err = h.loginService.Login(c.Request().Context(), email)
+	lang := httpErrorHandler.GetLangFromHeader(c)
+	var answer, err = h.loginService.Login(c.Request().Context(), email, lang)
 	if err != nil {
 		return err
 	}

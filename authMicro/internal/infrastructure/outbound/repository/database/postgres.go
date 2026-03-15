@@ -6,7 +6,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/PavelShe11/studbridge/authMicro/internal/config"
+	"github.com/PavelShe11/authnode/authMicro/internal/config"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
