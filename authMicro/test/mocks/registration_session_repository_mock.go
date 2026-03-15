@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	entity "github.com/PavelShe11/studbridge/authMicro/internal/entity"
+	entity "github.com/PavelShe11/authnode/authMicro/internal/entity"
 	mock "github.com/stretchr/testify/mock"
 )
 

@@ -3,11 +3,11 @@ package service
 import (
 	"context"
 
-	commonEntity "github.com/PavelShe11/studbridge/common/entity"
-	"github.com/PavelShe11/studbridge/common/logger"
-	"github.com/PavelShe11/studbridge/common/validation"
-	"github.com/PavelShe11/studbridge/user/internal/entity"
-	"github.com/PavelShe11/studbridge/user/internal/port"
+	commonEntity "github.com/PavelShe11/authnode/common/entity"
+	"github.com/PavelShe11/authnode/common/logger"
+	"github.com/PavelShe11/authnode/common/validation"
+	"github.com/PavelShe11/authnode/user/internal/entity"
+	"github.com/PavelShe11/authnode/user/internal/port"
 )
 
 type AccountService struct {

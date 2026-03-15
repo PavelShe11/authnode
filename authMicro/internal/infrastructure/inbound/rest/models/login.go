@@ -1,6 +1,6 @@
 package models
 
-import "github.com/PavelShe11/studbridge/authMicro/internal/service"
+import "github.com/PavelShe11/authnode/authMicro/internal/service"
 
 // LoginResponse represents the response after initiating login
 type LoginResponse struct {

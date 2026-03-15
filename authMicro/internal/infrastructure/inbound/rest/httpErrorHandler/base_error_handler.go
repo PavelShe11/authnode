@@ -4,9 +4,9 @@ import (
 	"errors"
 	"net/http"
 
-	commonEntity "github.com/PavelShe11/studbridge/common/entity"
-	"github.com/PavelShe11/studbridge/common/logger"
-	"github.com/PavelShe11/studbridge/common/translator"
+	commonEntity "github.com/PavelShe11/authnode/common/entity"
+	"github.com/PavelShe11/authnode/common/logger"
+	"github.com/PavelShe11/authnode/common/translator"
 
 	"github.com/labstack/echo/v4"
 )

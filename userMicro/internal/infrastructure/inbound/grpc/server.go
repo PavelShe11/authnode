@@ -3,9 +3,9 @@ package grpc
 import (
 	"net"
 
-	"github.com/PavelShe11/studbridge/common/logger"
-	"github.com/PavelShe11/studbridge/user/internal/config"
-	"github.com/PavelShe11/studbridge/user/utlis/interceptor"
+	"github.com/PavelShe11/authnode/common/logger"
+	"github.com/PavelShe11/authnode/user/internal/config"
+	"github.com/PavelShe11/authnode/user/utlis/interceptor"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"

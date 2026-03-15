@@ -1,6 +1,6 @@
 package models
 
-import "github.com/PavelShe11/studbridge/authMicro/internal/service"
+import "github.com/PavelShe11/authnode/authMicro/internal/service"
 
 // RegistrationResponse represents the response after initiating registration
 type RegistrationResponse struct {

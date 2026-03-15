@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 
-	"github.com/PavelShe11/studbridge/authMicro/grpcApi"
-	commonEntity "github.com/PavelShe11/studbridge/common/entity"
-	"github.com/PavelShe11/studbridge/common/translator"
-	"github.com/PavelShe11/studbridge/user/internal/entity"
-	"github.com/PavelShe11/studbridge/user/internal/service"
+	"github.com/PavelShe11/authnode/authMicro/grpcApi"
+	commonEntity "github.com/PavelShe11/authnode/common/entity"
+	"github.com/PavelShe11/authnode/common/translator"
+	"github.com/PavelShe11/authnode/user/internal/entity"
+	"github.com/PavelShe11/authnode/user/internal/service"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"

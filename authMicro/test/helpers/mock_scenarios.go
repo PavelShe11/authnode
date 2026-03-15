@@ -1,7 +1,7 @@
 package helpers
 
 import (
-	"github.com/PavelShe11/studbridge/common/logger"
+	"github.com/PavelShe11/authnode/common/logger"
 )
 
 // NoopLogger implements logger.Logger interface with no-op methods for testing

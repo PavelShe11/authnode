@@ -1,6 +1,6 @@
 package error // Package error common errors
 
-import commonEntity "github.com/PavelShe11/studbridge/common/entity"
+import commonEntity "github.com/PavelShe11/authnode/common/entity"
 
 // NewInvalidCodeError creates a new instance of InvalidCode error
 func NewInvalidCodeError() *commonEntity.BaseValidationError {

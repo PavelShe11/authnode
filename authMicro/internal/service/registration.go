@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/PavelShe11/studbridge/authMicro/internal/config"
-	"github.com/PavelShe11/studbridge/authMicro/internal/entity"
-	"github.com/PavelShe11/studbridge/authMicro/internal/port"
-	serviceErr "github.com/PavelShe11/studbridge/authMicro/internal/service/error"
-	"github.com/PavelShe11/studbridge/authMicro/utlis/generator"
-	"github.com/PavelShe11/studbridge/authMicro/utlis/hash"
-	commonEntity "github.com/PavelShe11/studbridge/common/entity"
-	"github.com/PavelShe11/studbridge/common/logger"
+	"github.com/PavelShe11/authnode/authMicro/internal/config"
+	"github.com/PavelShe11/authnode/authMicro/internal/entity"
+	"github.com/PavelShe11/authnode/authMicro/internal/port"
+	serviceErr "github.com/PavelShe11/authnode/authMicro/internal/service/error"
+	"github.com/PavelShe11/authnode/authMicro/utlis/generator"
+	"github.com/PavelShe11/authnode/authMicro/utlis/hash"
+	commonEntity "github.com/PavelShe11/authnode/common/entity"
+	"github.com/PavelShe11/authnode/common/logger"
 )
 
 type RegisterAnswer struct {

@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/PavelShe11/studbridge/common/entity"
-	"github.com/PavelShe11/studbridge/common/logger"
+	"github.com/PavelShe11/authnode/common/entity"
+	"github.com/PavelShe11/authnode/common/logger"
 
 	"github.com/BurntSushi/toml"
 	"github.com/nicksnyder/go-i18n/v2/i18n"

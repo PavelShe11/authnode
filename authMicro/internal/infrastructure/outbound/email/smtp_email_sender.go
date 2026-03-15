@@ -7,8 +7,8 @@ import (
 	"net/smtp"
 	"time"
 
-	"github.com/PavelShe11/studbridge/authMicro/internal/config"
-	"github.com/PavelShe11/studbridge/common/translator"
+	"github.com/PavelShe11/authnode/authMicro/internal/config"
+	"github.com/PavelShe11/authnode/common/translator"
 )
 
 type SmtpEmailSender struct {

@@ -3,7 +3,7 @@ package interceptor
 import (
 	"context"
 
-	"github.com/PavelShe11/studbridge/common/logger"
+	"github.com/PavelShe11/authnode/common/logger"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"

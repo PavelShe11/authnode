@@ -3,7 +3,7 @@ package tokenGenerator
 import (
 	"fmt"
 
-	"github.com/PavelShe11/studbridge/authMicro/internal/config"
+	"github.com/PavelShe11/authnode/authMicro/internal/config"
 	"github.com/golang-jwt/jwt/v5"
 )
 

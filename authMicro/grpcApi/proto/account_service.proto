@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/PavelShe11/studbridge/authMicro/grpcApi";
+option go_package = "github.com/PavelShe11/authnode/authMicro/grpcApi";
 
 import "google/protobuf/struct.proto";
 import "error.proto";

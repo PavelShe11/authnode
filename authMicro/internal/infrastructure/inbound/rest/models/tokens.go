@@ -1,6 +1,6 @@
 package models
 
-import "github.com/PavelShe11/studbridge/authMicro/internal/entity"
+import "github.com/PavelShe11/authnode/authMicro/internal/entity"
 
 // TokensResponse represents the authentication tokens returned to clients
 type TokensResponse struct {

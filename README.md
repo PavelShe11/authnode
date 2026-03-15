@@ -1,4 +1,4 @@
-# studBridge
+# authnode
 
 Backend системы аутентификации и управления аккаунтами, построенная на микросервисной архитектуре с использованием Go.
 
@@ -143,7 +143,7 @@ go test -v -run TestIntegration ./...
 ## Project Structure
 
 ```
-studBridge/
+authnode/
 ├── authMicro/                  # Auth service (REST API + gRPC client)
 │   ├── cmd/app/main.go         # Точка входа, DI-сборка приложения
 │   ├── grpcApi/                # Shared gRPC generated code + proto files

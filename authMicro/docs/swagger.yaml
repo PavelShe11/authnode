@@ -25,21 +25,21 @@ definitions:
       nameField:
         type: string
     type: object
-  github_com_PavelShe11_studbridge_authMicro_internal_infrastructure_inbound_rest_models.LoginResponse:
+  github_com_PavelShe11_authnode_authMicro_internal_infrastructure_inbound_rest_models.LoginResponse:
     properties:
       codeExpires:
         type: integer
       codePattern:
         type: string
     type: object
-  github_com_PavelShe11_studbridge_authMicro_internal_infrastructure_inbound_rest_models.RegistrationResponse:
+  github_com_PavelShe11_authnode_authMicro_internal_infrastructure_inbound_rest_models.RegistrationResponse:
     properties:
       codeExpires:
         type: integer
       codePattern:
         type: string
     type: object
-  github_com_PavelShe11_studbridge_authMicro_internal_infrastructure_inbound_rest_models.TokensResponse:
+  github_com_PavelShe11_authnode_authMicro_internal_infrastructure_inbound_rest_models.TokensResponse:
     properties:
       accessToken:
         type: string
@@ -53,10 +53,10 @@ definitions:
 info:
   contact:
     name: Pavel Sheludyakov
-    url: https://github.com/PavelShe11/studBridge
+    url: https://github.com/PavelShe11/authnode
   description: 'Сервис аутентификации: регистрация, вход по OTP-коду, управление JWT
     токенами.'
-  title: StudBridge Auth API
+  title: AuthNode Auth API
   version: "1.0"
 paths:
   /login/confirmEmail:
@@ -79,7 +79,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_PavelShe11_studbridge_authMicro_internal_infrastructure_inbound_rest_models.TokensResponse'
+            $ref: '#/definitions/github_com_PavelShe11_authnode_authMicro_internal_infrastructure_inbound_rest_models.TokensResponse'
         "400":
           description: Bad Request
           schema:
@@ -115,7 +115,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_PavelShe11_studbridge_authMicro_internal_infrastructure_inbound_rest_models.LoginResponse'
+            $ref: '#/definitions/github_com_PavelShe11_authnode_authMicro_internal_infrastructure_inbound_rest_models.LoginResponse'
         "400":
           description: Bad Request
           schema:
@@ -147,7 +147,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_PavelShe11_studbridge_authMicro_internal_infrastructure_inbound_rest_models.TokensResponse'
+            $ref: '#/definitions/github_com_PavelShe11_authnode_authMicro_internal_infrastructure_inbound_rest_models.TokensResponse'
         "400":
           description: Bad Request
           schema:
@@ -182,7 +182,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_PavelShe11_studbridge_authMicro_internal_infrastructure_inbound_rest_models.RegistrationResponse'
+            $ref: '#/definitions/github_com_PavelShe11_authnode_authMicro_internal_infrastructure_inbound_rest_models.RegistrationResponse'
         "400":
           description: Bad Request
           schema:

@@ -11,7 +11,7 @@ const docTemplate = `{
         "title": "{{.Title}}",
         "contact": {
             "name": "Pavel Sheludyakov",
-            "url": "https://github.com/PavelShe11/studBridge"
+            "url": "https://github.com/PavelShe11/authnode"
         },
         "version": "{{.Version}}"
     },
@@ -46,7 +46,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_PavelShe11_studbridge_authMicro_internal_infrastructure_inbound_rest_models.TokensResponse"
+                            "$ref": "#/definitions/github_com_PavelShe11_authnode_authMicro_internal_infrastructure_inbound_rest_models.TokensResponse"
                         }
                     },
                     "400": {
@@ -98,7 +98,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_PavelShe11_studbridge_authMicro_internal_infrastructure_inbound_rest_models.LoginResponse"
+                            "$ref": "#/definitions/github_com_PavelShe11_authnode_authMicro_internal_infrastructure_inbound_rest_models.LoginResponse"
                         }
                     },
                     "400": {
@@ -144,7 +144,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_PavelShe11_studbridge_authMicro_internal_infrastructure_inbound_rest_models.TokensResponse"
+                            "$ref": "#/definitions/github_com_PavelShe11_authnode_authMicro_internal_infrastructure_inbound_rest_models.TokensResponse"
                         }
                     },
                     "400": {
@@ -193,7 +193,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_PavelShe11_studbridge_authMicro_internal_infrastructure_inbound_rest_models.RegistrationResponse"
+                            "$ref": "#/definitions/github_com_PavelShe11_authnode_authMicro_internal_infrastructure_inbound_rest_models.RegistrationResponse"
                         }
                     },
                     "400": {
@@ -295,7 +295,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_PavelShe11_studbridge_authMicro_internal_infrastructure_inbound_rest_models.LoginResponse": {
+        "github_com_PavelShe11_authnode_authMicro_internal_infrastructure_inbound_rest_models.LoginResponse": {
             "type": "object",
             "properties": {
                 "codeExpires": {
@@ -306,7 +306,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_PavelShe11_studbridge_authMicro_internal_infrastructure_inbound_rest_models.RegistrationResponse": {
+        "github_com_PavelShe11_authnode_authMicro_internal_infrastructure_inbound_rest_models.RegistrationResponse": {
             "type": "object",
             "properties": {
                 "codeExpires": {
@@ -317,7 +317,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_PavelShe11_studbridge_authMicro_internal_infrastructure_inbound_rest_models.TokensResponse": {
+        "github_com_PavelShe11_authnode_authMicro_internal_infrastructure_inbound_rest_models.TokensResponse": {
             "type": "object",
             "properties": {
                 "accessToken": {
@@ -357,7 +357,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "",
 	BasePath:         "/auth/v1",
 	Schemes:          []string{},
-	Title:            "StudBridge Auth API",
+	Title:            "AuthNode Auth API",
 	Description:      "Сервис аутентификации: регистрация, вход по OTP-коду, управление JWT токенами.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
