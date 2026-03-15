@@ -58,6 +58,7 @@ type infrastructureModule struct {
 	accountProvider port.AccountProvider
 	tokenGenerator  jwtAdapter.TokenGenerator
 	emailSender     port.EmailSender
+	smtpSender      *emailAdapter.SmtpEmailSender
 }
 
 type servicesModule struct {
@@ -67,11 +68,12 @@ type servicesModule struct {
 }
 
 type app struct {
-	common       *commonModule
-	grpc         *grpcServiceClientsModule
-	repositories *repositoriesModule
-	services     *servicesModule
-	router       *rest.Router
+	common         *commonModule
+	grpc           *grpcServiceClientsModule
+	repositories   *repositoriesModule
+	infrastructure *infrastructureModule
+	services       *servicesModule
+	router         *rest.Router
 }
 
 func newCommonModule() *commonModule {
@@ -181,12 +183,14 @@ func newInfrastructureModule(
 		commonModule.config.Smtp,
 		commonModule.translator,
 		commonModule.config.CodeGenConfig.CodeTTL,
+		commonModule.logger,
 	)
 
 	return &infrastructureModule{
 		accountProvider: accountProvider,
 		tokenGenerator:  tokenGenerator,
 		emailSender:     smtpEmailSender,
+		smtpSender:      smtpEmailSender,
 	}
 }
 
@@ -251,11 +255,12 @@ func newApp() *app {
 	)
 
 	return &app{
-		common:       common,
-		grpc:         grpcClient,
-		repositories: repositories,
-		services:     services,
-		router:       router,
+		common:         common,
+		grpc:           grpcClient,
+		repositories:   repositories,
+		infrastructure: infrastructure,
+		services:       services,
+		router:         router,
 	}
 }
 
@@ -275,6 +280,7 @@ func (a *app) shutdown(ctx context.Context) {
 		a.common.logger.Errorf("Error during server shutdown: %v", err)
 	}
 
+	a.infrastructure.smtpSender.Close()
 	a.grpc.Close(a.common.logger)
 	a.repositories.Close(a.common.logger)
 
