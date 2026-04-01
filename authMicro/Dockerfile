@@ -1,13 +1,13 @@
 FROM golang:1.25-alpine AS builder-debug
 WORKDIR /app
 RUN apk add --no-cache git
-COPY go.work go.work.sum ./
 COPY common/go.mod ./common/
 COPY authMicro/go.mod authMicro/go.sum ./authMicro/
 COPY authMicro/grpcApi/go.mod ./authMicro/grpcApi/
-COPY userMicro/go.mod userMicro/go.sum ./userMicro/
-WORKDIR /app/authMicro
+RUN go work init ./common ./authMicro ./authMicro/grpcApi
+RUN go work sync
 RUN go mod download
+WORKDIR /app/authMicro
 RUN go install github.com/go-delve/delve/cmd/dlv@latest
 COPY common/ /app/common/
 COPY authMicro/cmd/ ./cmd/
@@ -20,13 +20,13 @@ RUN CGO_ENABLED=0 GOOS=linux go build -gcflags "all=-N -l" -o auth-app ./cmd/app
 FROM golang:1.25-alpine AS builder-release
 WORKDIR /app
 RUN apk add --no-cache git
-COPY go.work go.work.sum ./
 COPY common/go.mod ./common/
 COPY authMicro/go.mod authMicro/go.sum ./authMicro/
 COPY authMicro/grpcApi/go.mod ./authMicro/grpcApi/
-COPY userMicro/go.mod userMicro/go.sum ./userMicro/
-WORKDIR /app/authMicro
+RUN go work init ./common ./authMicro ./authMicro/grpcApi
+RUN go work sync
 RUN go mod download
+WORKDIR /app/authMicro
 COPY common/ /app/common/
 COPY authMicro/cmd/ ./cmd/
 COPY authMicro/internal/ ./internal/
