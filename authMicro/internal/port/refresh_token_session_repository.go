@@ -16,7 +16,4 @@ type RefreshTokenSessionRepository interface {
 
 	// DeleteByToken удаляет сессию по токену
 	DeleteByToken(ctx context.Context, token string) error
-
-	// CleanExpired удаляет истекшие сессии
-	CleanExpired(ctx context.Context) error
 }

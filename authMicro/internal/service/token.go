@@ -47,8 +47,6 @@ func NewTokenService(
 }
 
 func (s *TokenService) CreateTokens(ctx context.Context, accountId string) (*entity.Tokens, error) {
-	s.cleanupExpiredSessions(ctx)
-
 	claimsResult, err := s.accountProvider.GetAccessTokenPayload(ctx, accountId)
 	if err != nil {
 		s.logger.Error(fmt.Errorf("failed to get token payload: %w", err))
@@ -167,10 +165,4 @@ func (s *TokenService) generateTokenPair(
 	}
 
 	return refreshToken, accessToken, nil
-}
-
-func (s *TokenService) cleanupExpiredSessions(ctx context.Context) {
-	if err := s.refreshTokenSessionRepo.CleanExpired(ctx); err != nil {
-		s.logger.Error(fmt.Errorf("error cleaning expired refresh token sessions: %w", err))
-	}
 }

@@ -18,7 +18,6 @@ services:
     networks:
       - shared-network
 
-
   auth-service:
     build:
       context: .
@@ -54,7 +53,8 @@ services:
       - shared-network
 
   auth-db-postgres:
-    image: postgres:16-alpine
+    build:
+      context: ./authMicro/postgres
     container_name: auth-db-postgres
     environment:
       POSTGRES_DB: ${AUTH_PG_DB_NAME:-auth-micro-db}
