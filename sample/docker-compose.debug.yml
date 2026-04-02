@@ -1,7 +1,7 @@
 services:
   auth-service:
     build:
-      context: .
+      context: ..
       dockerfile: authMicro/Dockerfile
       target: run-debug
     environment:
@@ -15,8 +15,8 @@ services:
 
   user-service:
     build:
-      context: .
-      dockerfile: userMicro/Dockerfile
+      context: ..
+      dockerfile: sample/userMicro/Dockerfile
       target: run-debug
     environment:
       DEBUG_PORT: ${USER_DEBUG_PORT:-40001}

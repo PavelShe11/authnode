@@ -41,3 +41,4 @@ replace (
 	github.com/PavelShe11/authnode/authMicro/grpcApi => ../authMicro/grpcApi
 	github.com/PavelShe11/authnode/common => ../common
 )
+
