@@ -55,12 +55,6 @@ func NewLoginService(
 	}
 }
 
-func (l *LoginService) cleanupExpiredSessions(ctx context.Context) {
-	if err := l.loginSessionRepository.CleanExpired(ctx); err != nil {
-		l.logger.Error(fmt.Errorf("error cleaning expired login sessions: %w", err))
-	}
-}
-
 func (l *LoginService) verifyAccountStillValid(ctx context.Context, email string, expectedAccountId string) (bool, error) {
 	account, err := l.accountProvider.GetAccountByEmail(ctx, email)
 	if err != nil {
@@ -125,8 +119,6 @@ func (l *LoginService) createOrUpdateSession(ctx context.Context, email string, 
 }
 
 func (l *LoginService) Login(ctx context.Context, email string, lang string) (*LoginAnswer, error) {
-	l.cleanupExpiredSessions(ctx)
-
 	errs := commonEntity.NewValidationError()
 	l.validator.Var("email", email, "required,email", errs)
 	if len(errs.FieldErrors) > 0 {

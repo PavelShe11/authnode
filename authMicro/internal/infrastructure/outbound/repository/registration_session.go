@@ -63,12 +63,3 @@ func (r *registrationSessionRepository) DeleteByEmail(ctx context.Context, email
 	}
 	return nil
 }
-
-func (r *registrationSessionRepository) CleanExpired(ctx context.Context) error {
-	query := "DELETE FROM registration_session WHERE code_expires < NOW()"
-	_, err := r.getter.DefaultTrOrDB(ctx, r.db).ExecContext(ctx, query)
-	if err != nil {
-		return err
-	}
-	return nil
-}

@@ -16,7 +16,4 @@ type LoginSessionRepository interface {
 
 	// DeleteByEmail удаляет сессию входа по email
 	DeleteByEmail(ctx context.Context, email string) error
-
-	// CleanExpired удаляет истекшие сессии входа
-	CleanExpired(ctx context.Context) error
 }

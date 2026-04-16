@@ -215,42 +215,6 @@ func TestDeleteByEmail_Success(t *testing.T) {
 	assert.Nil(t, found)
 }
 
-// TestCleanExpired_RemovesExpiredOnly - cleanup logic
-func TestCleanExpired_RemovesExpiredOnly(t *testing.T) {
-	// Note: Not parallel due to TRUNCATE in setupTest
-	repo := setupTest(t)
-	ctx := context.Background()
-
-	// Use UTC to match PostgreSQL NOW()
-	now := time.Now().UTC()
-
-	expiredSession := &entity.RegistrationSession{
-		Email:       "expired@test.com",
-		Code:        "123",
-		CodeExpires: now.Add(-10 * time.Minute),
-	}
-	repo.Save(ctx, expiredSession)
-
-	activeSession := &entity.RegistrationSession{
-		Email:       "active@test.com",
-		Code:        "456",
-		CodeExpires: now.Add(10 * time.Minute),
-	}
-	repo.Save(ctx, activeSession)
-
-	// Give a small delay to ensure time difference
-	time.Sleep(100 * time.Millisecond)
-
-	err := repo.CleanExpired(ctx)
-	assert.NoError(t, err)
-
-	found, _ := repo.FindByEmail(ctx, "expired@test.com")
-	assert.Nil(t, found)
-
-	found, _ = repo.FindByEmail(ctx, "active@test.com")
-	assert.NotNil(t, found)
-}
-
 // toSnakeCase converts PascalCase to snake_case
 func toSnakeCase(s string) string {
 	if s == "" {

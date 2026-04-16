@@ -38,6 +38,6 @@ require (
 )
 
 replace (
-	github.com/PavelShe11/authnode/authMicro/grpcApi => ../authMicro/grpcApi
-	github.com/PavelShe11/authnode/common => ../common
+	github.com/PavelShe11/authnode/authMicro/grpcApi => ../../authMicro/grpcApi
+	github.com/PavelShe11/authnode/common => ../../common
 )

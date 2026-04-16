@@ -64,10 +64,3 @@ func (r *refreshTokenSessionRepository) DeleteByToken(ctx context.Context, token
 	_, err := r.getter.DefaultTrOrDB(ctx, r.db).ExecContext(ctx, query, token)
 	return err
 }
-
-// CleanExpired удаляет истекшие сессии
-func (r *refreshTokenSessionRepository) CleanExpired(ctx context.Context) error {
-	query := `DELETE FROM refresh_token_session WHERE expires_at < NOW()`
-	_, err := r.getter.DefaultTrOrDB(ctx, r.db).ExecContext(ctx, query)
-	return err
-}

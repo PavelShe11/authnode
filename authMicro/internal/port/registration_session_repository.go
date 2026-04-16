@@ -16,7 +16,4 @@ type RegistrationSessionRepository interface {
 
 	// DeleteByEmail удаляет сессию регистрации по email
 	DeleteByEmail(ctx context.Context, email string) error
-
-	// CleanExpired удаляет истекшие сессии регистрации
-	CleanExpired(ctx context.Context) error
 }

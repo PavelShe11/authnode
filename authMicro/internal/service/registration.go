@@ -46,8 +46,6 @@ func NewRegistrationService(
 }
 
 func (r *RegistrationService) Register(ctx context.Context, userData map[string]any, lang string) (*RegisterAnswer, error) {
-	r.cleanupExpiredSessions(ctx)
-
 	if err := r.accountProvider.ValidateAccountData(ctx, userData, lang); err != nil {
 		return nil, err
 	}
@@ -123,12 +121,6 @@ func (r *RegistrationService) ConfirmRegistration(ctx context.Context, userData 
 
 	r.logger.Info("Account successfully created for email=" + email)
 	return nil
-}
-
-func (r *RegistrationService) cleanupExpiredSessions(ctx context.Context) {
-	if err := r.registrationSessionRepository.CleanExpired(ctx); err != nil {
-		r.logger.Error(fmt.Errorf("error cleaning expired registration sessions: %w", err))
-	}
 }
 
 func (r *RegistrationService) validateConfirmationCode(ctx context.Context, email string, userData map[string]any) error {
